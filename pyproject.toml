@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "jpnotebooks"
+version = "0.1.0"
+description = ""
+authors = ["znat <nathan.zylbersztejn@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.27.6"
+rich = "^13.3.5"
+duckduckgo-search = "^2.9.3"
+jinja2 = "^3.1.2"
+langchain = "^0.0.189"
+cohere = "^4.6.1"
+gradio = "^3.33.1"
+pyyaml = "^6.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
