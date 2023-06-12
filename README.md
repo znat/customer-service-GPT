@@ -1,4 +1,4 @@
-# Customer-Service-GPT
+# 🧑 Customer-Service-GPT
 
 Experimental LLM-native process-driven chatbots.
 
@@ -6,44 +6,7 @@ Process-driven chatbots assist users in completing tasks by guiding them through
 
 These bots attempt to enforce business logic and validate user input while remaining resilient to non-linear conversation paths. 
 
-<center>
-![](./appointment_booking.gif)
-</center>
-## Demos
-
-In both examples, availability is defined in the code and checked against user proposals. The bots should only answer questions they are authorized to respond to and decline to answer anything else.
-
-<details>  
-  <summary> 🎬 Appointment booking bot </summary>
-  <hr>
-An AI medical assistant helps users book appointments at the clinic.
-
-https://github.com/znat/customer-service-GPT/assets/3694634/4c285518-86d3-4692-b8d6-fcc425403590
-    
-Run it:
-```bash
-poetry run python example_booking_bot.py
-```
-
-</details>
-<details>  
-  <summary> 🎬 Duplex bot </summary>
-  <hr>
-  
-This bot replicates the Google Duplex demo, in which an AI schedules a hair salon appointment. The AI is the customer assistant and the Human is the hair salon attendant.
-See `example_duplex_bot.py` for implementation details.
-
-
-https://github.com/znat/customer-service-GPT/assets/3694634/92d21e8e-4d44-4282-b23c-6973dd385d77
-
-
-Run it:
-```bash
-poetry run python example_duplex_bot.py
-```
-</details>
-
-## Install
+## 👷 Install
 
 Requirements: python 3.10 and [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 ```bash
@@ -55,12 +18,33 @@ Create an `.env` file at the root containing your OpenAI API key.
 OPENAI_API_KEY=<key>
 ```
 
-## Run examples
+## 🎬 Demos
+
+### 📅 Appointment booking
+
+An AI medical assistant helps users book appointments at the clinic by trying to find matching availability, answering questions, and collecting necessary information to confirm the appointment
+
 ```bash
 poetry run python example_booking_bot.py
 ```
 
-## How it works
+<div align="center">
+<img align="center" src="./appointment_booking_demo.gif" alt="demonstration" width=500>
+</div>
+
+### 💇 Duplex clone
+
+This bot replicates the Google Duplex demo, in which an AI schedules a hair salon appointment. The AI is the customer assistant and the Human is the hair salon attendant.
+```bash
+poetry run python example_booking_bot.py
+```
+
+
+<div align="center">
+<img align="center" src="./google_duplex_demo.gif" alt="demonstration" width=500>
+</div>
+
+## ⚙️ How it works
 
 The `ProcessChain` is a sequential [Langchain](https://github.com/hwchase17/langchain) chain working as follows:
 
