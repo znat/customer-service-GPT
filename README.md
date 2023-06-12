@@ -4,8 +4,11 @@ Experimental LLM-native process-driven chatbots.
 
 Process-driven chatbots assist users in completing tasks by guiding them through a sequence of steps, such as opening a bank account or scheduling an appointment.
 
-These bots attempt to enforce rudimentary business logic and input validation while remaining resilient to non-linear conversation paths. Keep in mind these are experimental prototypes and easy to break. 
+These bots attempt to enforce business logic and validate user input while remaining resilient to non-linear conversation paths. 
 
+<center>
+![](./appointment_booking.gif)
+</center>
 ## Demos
 
 In both examples, availability is defined in the code and checked against user proposals. The bots should only answer questions they are authorized to respond to and decline to answer anything else.
