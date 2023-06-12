@@ -16,9 +16,9 @@ In both examples, availability is defined in the code and checked against user p
 <details>  
   <summary> 🎬 Appointment booking bot </summary>
   <hr>
-An AI medical secretary helps users book appointments at the clinic.
+An AI medical assistant helps users book appointments at the clinic.
 
-https://github.com/znat/customer-service-GPT/assets/3694634/207d1f19-dc53-4788-944e-8a24000d713a
+https://github.com/znat/customer-service-GPT/assets/3694634/4c285518-86d3-4692-b8d6-fcc425403590
     
 Run it:
 ```bash
@@ -33,7 +33,8 @@ poetry run python example_booking_bot.py
 This bot replicates the Google Duplex demo, in which an AI schedules a hair salon appointment. The AI is the customer assistant and the Human is the hair salon attendant.
 See `example_duplex_bot.py` for implementation details.
 
-https://github.com/znat/customer-service-GPT/assets/3694634/63b64736-e2ea-441f-a9cf-8a57c18aad34
+
+https://github.com/znat/customer-service-GPT/assets/3694634/92d21e8e-4d44-4282-b23c-6973dd385d77
 
 
 Run it:
