@@ -164,3 +164,19 @@ gradio_bot(chain=process_chain, initial_input="hey", title="FormBot").launch() #
 ```
 
 See code examples for more details and more complex entities such as dates.
+
+## Notes
+
+What would be nice is the possibility to return a rendered object even some values are missing
+So, examples:
+- At validation time, availability results in several slots (e.g 2 in a given day). 
+Currently validation fails with an error message with a placeholder.
+But the validation didnt really fail, availability is valid, just that we need to ask the user to choose one of the slots
+One ooption:
+- All fields optional
+- completion handled with `is_completed` which by default checks that all fields are non null
+Example:
+- user communicates availability. Stored in availability
+- pydantic validation calculates available slots and stores them in available_slots.
+- available_slots question is surfaced in the prompt. Validation checks that the answer from the user fit in the available slots.
+- the availability question is reprompted and formatted with `prompted_slots`

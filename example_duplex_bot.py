@@ -66,16 +66,16 @@ Nathan's has the following available slots:
         title="Availability for a haircut",
         # This is not Python interpolation, but rather a hint for the model that can propose
         # relevant dates in context
-        question="Would you have some availability on {2_available_slots_in_human_friendly_format}?",
+        question="Would you have some availability on {2 available slots formatted as '%A %B %-d %H:%M', e.g 'Monday June 3 15:00' format}?",
         description=f"Providing availability",
         exclude=True,  # We dont need it in the final result
     )
 
-    appointment_time: str = Field(
+    appointment_time: Optional[str] = Field(
         title="Appointment in human frendly format",
     )
     # This variable will be set in the validation step, but will not be asked to the user, hence no `question``.
-    appointment: dict[str, str] = Field(
+    appointment: Optional[dict[str, str]] = Field(
         title="Appointment slot ISO datetimes",
     )
 
@@ -86,6 +86,27 @@ Nathan's has the following available slots:
         description="We need a confirmation to make sure the salong has booked the appointment.",
         exclude=True,  # We dont need it in the final result
     )
+
+    @classmethod
+    def get_available_slots(from_date: Optional[datetime.datetime], to_date: Optional[datetime.datetime]):
+        slots = [
+            # Tomorrow 9am
+            datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
+            # Tomorrow 2pm
+            datetime.datetime(now.year, now.month, now.day + 1, 14, 0),
+            # Tomorrow 6pm
+            datetime.datetime(now.year, now.month, now.day + 1, 18, 0),
+            # 2 days later 1pm
+            datetime.datetime(now.year, now.month, now.day + 2, 13, 0),
+            # 12pm in 3 days,
+            datetime.datetime(now.year, now.month, now.day + 3, 12, 0),
+            # 5pm in 3 days,
+            datetime.datetime(now.year, now.month, now.day + 3, 17, 0),
+            # 7am in 4 days,
+            datetime.datetime(now.year, now.month, now.day + 4, 7, 0),
+            # 3pm in 4 days,
+            datetime.datetime(now.year, now.month, now.day + 4, 15, 0),
+        ]
 
     @root_validator(pre=True)
     def validate(cls, values: dict):
@@ -134,7 +155,12 @@ Nathan's has the following available slots:
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
+from langchain.llms import Cohere
+
+# ner_llm = Cohere(temperature=0, client=None, max_tokens=100)
+# chat_llm = Cohere(temperature=0, client=None, max_tokens=100)
+
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),

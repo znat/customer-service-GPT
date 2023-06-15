@@ -39,25 +39,37 @@ class FormValidationChain(Chain):
     ) -> Dict[str, str]:
         return self.validate(inputs)
 
-    def validate(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        try:
-            entities = json.loads(inputs["entities"])
-        except json.JSONDecodeError as e:
-            entities = []
-
-        variables = {d["name"]: d["value"] for d in entities}
-        # Fill in variables from memory
+    def load_variables(self, variables: Optional[Dict[str, Any]] = {}) -> Dict[str, Any]:
+        
         for field in self.form.__fields__.keys():
             if field not in variables.keys():
                 stored_value = self.memory.kv_store.get(field)
                 if stored_value is not None:
                     variables[field] = self.memory.kv_store.get(field)
+        return variables
+    
+    def save_variables(self, variables: Dict[str, Any]) -> None:
+        for field in self.form.__fields__.keys():
+            if field in variables.keys():
+                self.memory.kv_store.set(field, variables[field])
+
+    def validate(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        # Just to raise the "All fields should be optional" error if applicable
+        self.form()
+        try:
+            entities = json.loads(inputs["entities"])
+        except json.JSONDecodeError as e:
+            entities = []
+
+        variables = self.load_variables({d["name"]: d["value"] for d in entities})
         errors: dict = {}
         result: Result | None = None
         try:
             if self.verbose:
                 print("Current variables:",variables)
             data = self.form.parse_obj(variables)
+            print("Data:", data.dict(exclude_none=True))
+            self.save_variables(data.dict(exclude_none=True))
             if self.verbose:
                 print("Valid object:", data)
             if data.is_completed():
@@ -84,6 +96,7 @@ class FormValidationChain(Chain):
         error_dict = {}
 
         for error_item in error.errors():
+            print(error_item)
             field_name = error_item["loc"][0]
             message = error_item["msg"]
             error_type_from_error = error_item["type"]
