@@ -19,7 +19,7 @@ class ProcessChain(SequentialChain):
     entities: dict[str, Type[Entity] | tuple[Type[Entity], BaseLanguageModel]]
     entity_examples: list[EntityExample]
     additional_ner_instructions: Optional[str] = ""
-    form: Type[Process]
+    process: Type[Process]
     memory: Optional[ConversationMemory]
     chains: Optional[list[Chain]] = []
     verbose: bool = True

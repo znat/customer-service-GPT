@@ -224,7 +224,7 @@ process_chain = ProcessChain(
     memory=ConversationMemory(),
     ner_llm=ner_llm,
     chat_llm=chat_llm,
-    form=AppointmentBookingProcess,
+    process=AppointmentBookingProcess,
     verbose=True,
     entities={
         "availability": DateTimeEntity,
