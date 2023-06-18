@@ -1,9 +1,20 @@
-- text: "I'm peter jackson"
+- context: 'What is your first name?'
+  text: "I'm peter jackson"
   entities:
       - name: first_name
         value: Peter
       - name: last_name
         value: Jackson
+- context: 'What is your phone number?'
+  text: "I'm James Dean"
+  entities:
+      - name: first_name
+        value: James
+      - name: last_name
+        value: Dean
+- context: 'What is your first name?'
+  text: 'First one'
+  entities: []
 - text: 'My first name is ana'
   entities:
       - name: first_name
@@ -32,6 +43,28 @@
         value: Jo
       - name: last_name
         value: Neville
+- context: 'Friday 16 at 18:00, Saturday 24 at 08:00 or Thursday 22 at 09:00'
+  text: 'Friday'
+  entities:
+      - name: availability
+        value: 'Friday 16 at 18:00'
+- context: 'What is your last name'
+  text: 'Do you have anything next Tuesday?'
+  entities:
+      - name: availability
+        value: 'next Tuesday'
+
+- context: 'Wednesday 15 at 19:00, Sunday 25 at 08:00 or Thursday 22 at 09:00'
+  text: I'm Jamie but on second thought I prefer Sunday
+  entities:
+      - name: availability
+        value: 'Sunday 25 at 08:00'
+
+- context: 'Friday 16 at 18:00, Saturday 24 at 08:00 or Thursday 22 at 09:00'
+  text: 'the 24th'
+  entities:
+      - name: availability
+        value: ' Saturday 24 at 08:00'
 - text: "let's go next Thursday at 4pm"
   entities:
       - name: availability
@@ -45,6 +78,11 @@
   entities:
       - name: confirmation
         value: true
+- context: 'Anything else before we confirm the appointment?'
+  text: No we're good
+  entities:
+      - name: confirmation
+        value: true
 - context: 'When are you available'
   text: 'Yes'
   entities: []
@@ -53,8 +91,19 @@
   entities:
       - name: availability
         value: 'Friday 16 at 11:00'
+- context: 'I can propose Wednesday 14 at 09:00, Friday 16 at 11:00 or Sunday 18 at 11:00. Is there an option that suits you? What is your availability like next week?'
+  text: '18th'
+  entities:
+      - name: availability
+        value: 'Sunday 18 at 11:00'
+
 - context: 'Would you be available Friday 09 at 14:00 or Friday 09 at 18:00?'
   text: 'the first one'
+  entities:
+      - name: availability
+        value: 'Friday 09 at 14:00'
+- context: 'Would you be available Friday 09 at 14:00 or Friday 09 at 18:00?'
+  text: 'Any works'
   entities:
       - name: availability
         value: 'Friday 09 at 14:00'
@@ -67,8 +116,7 @@
   entities:
       - name: availability
         value: 'Monday'
-
-- context: 'GI can propose Tuesday 13 at 17:00. Is that time slot suitable for you?'
+- context: 'I can propose Tuesday 13 at 17:00. Is that time slot suitable for you?'
   text: 'yes'
   entities:
       - name: availability
@@ -79,7 +127,41 @@
 - context: 'Sure, what information do you need to confirm?'
   text: 'Their phone number?'
   entities: []
-- context: 'Sure, what information do you need to confirm?'
-  text: 'Their phone number?'
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: we're good
+  entities:
+      - name: confirmation
+        value: true
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Yeah but what was your address again?
   entities: []
-
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Yes except that my name is Patrick Stewaert
+  entities:
+    - name: last_name
+      value: Stewaert
+    - name: first_name
+      value: Patrick
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: What is your phone number again?
+  entities: []
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: OK, but I need to change something?
+  entities:
+      - name: confirmation
+        value: false
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: OK, but my phone number is incorrect?
+  entities:
+      - name: confirmation
+        value: false
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Perfect
+  entities:
+      - name: confirmation
+        value: true
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Absolutely
+  entities:
+      - name: confirmation
+        value: true

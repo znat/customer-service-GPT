@@ -1,7 +1,15 @@
+- text: "We have availability with James, our most senior hair designer on Thursday, would that work?"
+  entities:
+      - name: availability
+        value: 'Thursday'
 - text: "let's go next Thursday at 4pm"
   entities:
       - name: availability
         value: 'next Thursday at 4pm'
+- text: Sorry, our first availability is on Thursday, would that work?
+  entities:
+      - name: availability
+        value: 'Thursday'
 - text: 'What do you have next week?'
   entities:
       - name: availability
@@ -42,7 +50,6 @@
   entities:
       - name: availability
         value: 'Monday'
-
 - context: 'I can propose Tuesday 13 at 17:00. Is that time slot suitable for you?'
   text: 'yes'
   entities:

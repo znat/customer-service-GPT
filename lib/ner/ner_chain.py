@@ -17,7 +17,7 @@ class NERChain(SequentialChain):
     additional_instructions: Optional[str] = ""
     output_key: str = "entities"
     llm: BaseLanguageModel
-    examples: list[EntityExample]
+    examples: Optional[list[EntityExample]] = None
     entities: dict[str, Type[Entity] | tuple[Type[Entity], BaseLanguageModel]]
     chains: list[Chain] = []
 
@@ -74,9 +74,9 @@ class NERChain(SequentialChain):
             output_key="raw_entities",
             prompt=NERPromptTemplate(
                 input_variables=["input", "history"],
-                examples=values["examples"],
+                examples=values.get("examples", None),
                 entities=values["entities"],
-                additional_instructions=values["additional_instructions"]
+                additional_instructions=values.get("additional_instructions", None)
             ),
         )
 

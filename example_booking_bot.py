@@ -8,24 +8,28 @@ from pydantic import Field, root_validator, validator
 
 from lib.bot import gradio_bot
 from lib.conversation_memory import ConversationMemory
-from lib.ner.entities.basic_entities import BooleanEntity, Entity, EntityExample
+from lib.logger_config import setup_logger
+from lib.ner.entities.basic_entities import (BooleanEntity, Entity,
+                                             EntityExample)
 from lib.ner.entities.datetime_entity import DateTimeEntity
 from lib.process.process_chain import ProcessChain
 from lib.process.schemas import Process
+
+logger = setup_logger(__name__)
 
 
 # Some calendar availability the bot can use
 now = datetime.datetime.now()
 
-# Let's populate the clinic calendar with some availability.
-# The bot will match users availability with the clinic calendar.
+# Let's populate the salon calendar with some availability.
+# The bot will match users availability with the salon calendar.
 
 
 # Use the join() function to create a string with the bulleted list of dates
 
 
 class AppointmentBookingProcess(Process):
-    clinic_available_slots: ClassVar[list[datetime.datetime]] = [
+    salon_available_slots: ClassVar[list[datetime.datetime]] = [
         # Tomorrow 9am
         datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
         # Tomorrow 2pm
@@ -76,13 +80,11 @@ To all other questions reply you don't know.
     availability: Optional[dict | str] = Field(
         title="Availability for doctor appointment",
         question="Would you be available {{matching_slots_in_human_friendly_format}}",
-        description=f"Providing availability helps finding an available slot in the clinics calendar",
-        exclude=True,  # We dont need it in the final result
+        description=f"Providing availability helps finding an available slot in the salon's calendar",
     )
 
     appointment_time: Optional[str] = Field(
         title="Appointment in human frendly format",
-        exclude=True,
     )
     # This variable will be set in the validation step, but will not be asked to the user, hence no `question``.
     appointment: Optional[dict[str, str]] = Field(
@@ -109,10 +111,9 @@ To all other questions reply you don't know.
 
     confirmation: Optional[bool] = Field(
         title="Confirmation",
-        question="Great. Let's review everyting. You are {{first_name}} {{last_name}}, your phone numner is {{phone_number}} and we have booked an appointment on {human_friendly_appointment_time}. Is everything correct?",
+        question="Great. Let's review everyting. You are {{first_name}} {{last_name}}, your phone number is {{phone_number}} and we have booked an appointment on {human_friendly_appointment_time}. Is everything correct?",
         name="Confirmation",
         description="We need a confirmation to make sure we have the right information before we book.",
-        exclude=True,  # We dont need it in the final result
     )
 
     matching_slots: Optional[list[datetime.datetime]] = Field(
@@ -129,7 +130,7 @@ To all other questions reply you don't know.
         end = datetime.datetime.fromisoformat(availability["end"])
         available_slots = []
 
-        for slot in cls.clinic_available_slots:
+        for slot in cls.salon_available_slots:
             if start <= slot < end:
                 available_slots.append(slot)
 
@@ -147,45 +148,57 @@ To all other questions reply you don't know.
 
     @root_validator(pre=True)
     def validate(cls, values: dict):
-        # Let's define a default value in case no availability is provided yet or 
+        # Let's define a default value in case no availability is provided yet or
         # there is no matching slot between the user availability and the salon availability
         values[
-                "matching_slots_in_human_friendly_format"
-            ] = cls.slots_in_human_friendly_format(random.sample(cls.clinic_available_slots, 3))
-            
+            "matching_slots_in_human_friendly_format"
+        ] = cls.slots_in_human_friendly_format(
+            random.sample(cls.salon_available_slots, 3)
+        )
         if values.get("availability") is not None:
             matching_slots = cls.matching_slots(values["availability"])
             if len(matching_slots) == 0:
                 del values["availability"]
             elif len(matching_slots) == 1:
-                print(f"Found a slot at {matching_slots[0]}")
+                logger.debug(f"Found a slot at {matching_slots[0]}")
                 values["appointment"] = {
                     "start": matching_slots[0].isoformat(),
                     "end": (
                         matching_slots[0] + datetime.timedelta(minutes=15)
                     ).isoformat(),
                 }
-                values["availability"] = matching_slots[0].isoformat()
+                values["availability"] = {
+                    "start": values["appointment"]["start"],
+                    "end": values["appointment"]["end"],
+                    "grain": 15*60,
+                }
                 values["appointment_time"] = matching_slots[0].strftime(
                     "%A, %d %B %Y, %H:%M"
                 )
+                values["matching_slots"] = [matching_slots[0]]
+                values[
+                    "matching_slots_in_human_friendly_format"
+                ] = cls.slots_in_human_friendly_format([matching_slots[0]])
             elif len(matching_slots) > 1:
-                print(f"Found several slots at {matching_slots}")
+                logger.debug(f"Found several slots")
                 del values["availability"]
+                if "appointment" in values:
+                    del values["appointment"]
                 values[
                     "matching_slots_in_human_friendly_format"
                 ] = cls.slots_in_human_friendly_format(matching_slots)
-        print(values)
+       
+        logger.debug("validated entity values:", values)
         return values
 
     @validator("first_name")
     def validate_first_name(cls, v):
-        assert v[0].isalpha(), "First name must start with a letter."
+        assert v is None or v[0].isalpha(), "First name must start with a letter."
         return v.capitalize()
 
     @validator("last_name")
     def validate_last_name(cls, v):
-        assert v[0].isalpha(), "Last name must start with a letter."
+        assert v is None or v[0].isalpha(), "Last name must start with a letter."
         return v.capitalize()
 
     @validator("phone_number")
@@ -193,7 +206,7 @@ To all other questions reply you don't know.
         import re
 
         pattern = re.compile(r"^\d{3}-\d{3}-\d{4}$")
-        assert pattern.match(
+        assert v is None or pattern.match(
             v
         ), f"Can you please provide a valid phone number using the XXX-XXX-XXXX format?"
         return v
@@ -232,5 +245,7 @@ and not if the user just says "yes" or confirms but asks follow-up questions.
 )
 
 gradio_bot(
-    chain=process_chain, title="Appointment Booking", initial_input="Hey"
+    chain=process_chain,
+    title="Appointment Booking",
+    initial_input="I want to book an appointment",
 ).launch()

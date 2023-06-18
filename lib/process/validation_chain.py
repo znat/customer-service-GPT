@@ -7,6 +7,9 @@ from pydantic import BaseModel, ValidationError
 from .schemas import Result, Status, Process
 
 from ..conversation_memory import ConversationMemory
+from ..logger_config import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class FormValidationChain(Chain):
@@ -39,19 +42,22 @@ class FormValidationChain(Chain):
     ) -> Dict[str, str]:
         return self.validate(inputs)
 
-    def load_variables(self, variables: Optional[Dict[str, Any]] = {}) -> Dict[str, Any]:
-        
+    def load_variables(
+        self, variables: Optional[Dict[str, Any]] = {}
+    ) -> Dict[str, Any]:
         for field in self.form.__fields__.keys():
             if field not in variables.keys():
                 stored_value = self.memory.kv_store.get(field)
                 if stored_value is not None:
                     variables[field] = self.memory.kv_store.get(field)
         return variables
-    
+
     def save_variables(self, variables: Dict[str, Any]) -> None:
         for field in self.form.__fields__.keys():
             if field in variables.keys():
                 self.memory.kv_store.set(field, variables[field])
+            else:
+                self.memory.kv_store.set(field, None)
 
     def validate(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         # Just to raise the "All fields should be optional" error if applicable
@@ -66,28 +72,30 @@ class FormValidationChain(Chain):
         result: Result | None = None
         try:
             if self.verbose:
-                print("Current variables:",variables)
+                logger.debug("Current variables:", variables)
             data = self.form.parse_obj(variables)
-            print("Data:", data.dict(exclude_none=True))
-            self.save_variables(data.dict(exclude_none=True))
-            if self.verbose:
-                print("Valid object:", data)
+            logger.debug("Process model pre-validation:", data.dict())
+            self.save_variables(data.dict())
+            logger.debug("Process model post-validation:", data.dict())
+            
             if data.is_completed():
                 result = Result(status=Status.completed, result=data, errors=None)
-                if self.verbose:
-                    print("Result:", result)
+                logger.debug(f"Process result: ${result.dict()}")
             self.memory.kv_store.set("_errors", {})
-            variables = {**{k: v for k, v in variables.items()}}
+            variables = self.memory.kv_store.load_memory_variables()["variables"]
         except ValidationError as e:
-            if self.verbose:
-                print("Errors:", e)
+            logger.debug("Validation error:", e)
             errors = self.convert_validation_error_to_dict(e, "assertion")
-            variables = {k: v for k, v in variables.items() if k not in errors.keys()}
-            if self.verbose:
-                print("Variables:", variables)
+            variables = {
+                k: v
+                for k, v in self.memory.kv_store.load_memory_variables()[
+                    "variables"
+                ].items()
+                if k not in errors.keys()
+            }
+            logger.debug("Variables after validation errors:", variables)
             variables["_errors"] = errors
         return {"variables": variables, "result": result.dict() if result else None}
-    
 
     @staticmethod
     def convert_validation_error_to_dict(
@@ -96,7 +104,6 @@ class FormValidationChain(Chain):
         error_dict = {}
 
         for error_item in error.errors():
-            print(error_item)
             field_name = error_item["loc"][0]
             message = error_item["msg"]
             error_type_from_error = error_item["type"]
@@ -113,4 +120,3 @@ class FormValidationChain(Chain):
                 error_dict[field_name] = message
 
         return error_dict
-

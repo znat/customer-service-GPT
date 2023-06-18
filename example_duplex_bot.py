@@ -1,5 +1,6 @@
 import datetime
-from typing import Optional
+import random
+from typing import ClassVar, Optional
 
 import yaml
 from langchain.chat_models import ChatOpenAI
@@ -7,43 +8,40 @@ from pydantic import Field, root_validator, validator
 
 from lib.bot import console_bot, gradio_bot
 from lib.conversation_memory import ConversationMemory
+from lib.logger_config import setup_logger
 from lib.ner.entities.basic_entities import BooleanEntity, Entity, EntityExample
 from lib.ner.entities.datetime_entity import DateTimeEntity
 from lib.process.process_chain import ProcessChain
 from lib.process.schemas import Process
 
+logger = setup_logger(__name__)
 # Nathan desperately needs a hair cut but he is too lazy to call himself.
 # Fortunately, he has an AI assistant that can book an appointment for him.
 
 # Let's define some availability for Nathan
 now = datetime.datetime.now()
-nathan_available_slots = [
-    # Tomorrow 9am
-    datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
-    # Tomorrow 2pm
-    datetime.datetime(now.year, now.month, now.day + 1, 14, 0),
-    # Tomorrow 6pm
-    datetime.datetime(now.year, now.month, now.day + 1, 18, 0),
-    # 2 days later 1pm
-    datetime.datetime(now.year, now.month, now.day + 2, 13, 0),
-    # 12pm in 3 days,
-    datetime.datetime(now.year, now.month, now.day + 3, 12, 0),
-    # 5pm in 3 days,
-    datetime.datetime(now.year, now.month, now.day + 3, 17, 0),
-    # 7am in 4 days,
-    datetime.datetime(now.year, now.month, now.day + 4, 7, 0),
-    # 3pm in 4 days,
-    datetime.datetime(now.year, now.month, now.day + 4, 15, 0),
-]
-
-# Use the join() function to create a string with the bulleted list of dates
-bulleted_list = "\n".join(
-    "- {}".format(iso_date)
-    for iso_date in [slot.isoformat() for slot in nathan_available_slots]
-)
 
 
 class DuplexProcess(Process):
+    nathan_available_slots: ClassVar[list[datetime.datetime]] = [
+        # Tomorrow 9am
+        datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
+        # Tomorrow 2pm
+        datetime.datetime(now.year, now.month, now.day + 1, 14, 0),
+        # Tomorrow 6pm
+        datetime.datetime(now.year, now.month, now.day + 1, 18, 0),
+        # 2 days later 1pm
+        datetime.datetime(now.year, now.month, now.day + 2, 13, 0),
+        # 12pm in 3 days,
+        datetime.datetime(now.year, now.month, now.day + 3, 12, 0),
+        # 5pm in 3 days,
+        datetime.datetime(now.year, now.month, now.day + 3, 17, 0),
+        # 7am in 4 days,
+        datetime.datetime(now.year, now.month, now.day + 4, 7, 0),
+        # 3pm in 4 days,
+        datetime.datetime(now.year, now.month, now.day + 4, 15, 0),
+    ]
+
     process_description = f"""
 You are Nathan's AI assistant. Nathan needs a haircut and you need to book an appointment with the salon.
 The salon is the Human.
@@ -56,93 +54,83 @@ If the Human asks, you can share the following information about Nathan:
 
 Only share if asked.
 If the salon asks anything else about Nathan, say it's not relevant.
-
-Nathan's has the following available slots:
-
-{bulleted_list}
 """
 
     availability: Optional[dict | str | None] = Field(
         title="Availability for a haircut",
         # This is not Python interpolation, but rather a hint for the model that can propose
         # relevant dates in context
-        question="Would you have some availability on {2 available slots formatted as '%A %B %-d %H:%M', e.g 'Monday June 3 15:00' format}?",
+        question="Would you have some availability on {{matching_slots_in_human_friendly_format}}?",
         description=f"Providing availability",
-        exclude=True,  # We dont need it in the final result
+    )
+
+    confirmation: Optional[bool] = Field(
+        title="Confirmation",
+        question="Can we confirm the appointment on {{appointment_time}}?",
+        name="Confirmation",
+        description="We need a confirmation to make sure the salon has booked the appointment.",
     )
 
     appointment_time: Optional[str] = Field(
         title="Appointment in human frendly format",
     )
+
     # This variable will be set in the validation step, but will not be asked to the user, hence no `question``.
     appointment: Optional[dict[str, str]] = Field(
         title="Appointment slot ISO datetimes",
     )
 
-    confirmation: Optional[bool] = Field(
-        title="Confirmation",
-        question=f"Can we confirm the appointment on {{appointment_time}}?",
-        name="Confirmation",
-        description="We need a confirmation to make sure the salong has booked the appointment.",
-        exclude=True,  # We dont need it in the final result
+    matching_slots: Optional[list[datetime.datetime]] = Field(
+        title="Matching slots",
     )
 
-    @classmethod
-    def get_available_slots(from_date: Optional[datetime.datetime], to_date: Optional[datetime.datetime]):
-        slots = [
-            # Tomorrow 9am
-            datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
-            # Tomorrow 2pm
-            datetime.datetime(now.year, now.month, now.day + 1, 14, 0),
-            # Tomorrow 6pm
-            datetime.datetime(now.year, now.month, now.day + 1, 18, 0),
-            # 2 days later 1pm
-            datetime.datetime(now.year, now.month, now.day + 2, 13, 0),
-            # 12pm in 3 days,
-            datetime.datetime(now.year, now.month, now.day + 3, 12, 0),
-            # 5pm in 3 days,
-            datetime.datetime(now.year, now.month, now.day + 3, 17, 0),
-            # 7am in 4 days,
-            datetime.datetime(now.year, now.month, now.day + 4, 7, 0),
-            # 3pm in 4 days,
-            datetime.datetime(now.year, now.month, now.day + 4, 15, 0),
-        ]
+    matching_slots_in_human_friendly_format: Optional[str] = Field(
+        title="Matching slots in human frendly format",
+    )
 
     @root_validator(pre=True)
     def validate(cls, values: dict):
+        # Let's define a default value in case no availability is provided yet or
+        # there is no matching slot between the Nathan's availability and the salon's availability
+        values[
+            "matching_slots_in_human_friendly_format"
+        ] = cls.slots_in_human_friendly_format(
+            random.sample(cls.nathan_available_slots, 3)
+        )
         if values.get("availability") is not None:
-            start = datetime.datetime.fromisoformat(values["availability"]["start"])
-            end = datetime.datetime.fromisoformat(values["availability"]["end"])
-            matching_slots = []
-            for a in nathan_available_slots:
-                # Check if a 15 min appointment fits into the availability range provided by the user
-                if start <= a <= a + datetime.timedelta(minutes=15) <= end:
-                    matching_slots.append(a)
+            matching_slots = cls.matching_slots(values["availability"])
             if len(matching_slots) == 0:
                 del values["availability"]
-                print(f"No slot found in {nathan_available_slots}")
-                raise ValueError(
-                    "Nathan is not available on that date. Other available slots are {2_available_slots_in_human_friendly_format})}"
-                )
             elif len(matching_slots) == 1:
-                print(f"Found a slot at {matching_slots[0]}")
+                logger.debug(f"Found a slot at {matching_slots[0]}")
                 values["appointment"] = {
                     "start": matching_slots[0].isoformat(),
                     "end": (
                         matching_slots[0] + datetime.timedelta(minutes=15)
                     ).isoformat(),
                 }
-                values["availability"] = matching_slots[0].isoformat()
+                values["availability"] = {
+                    "start": values["appointment"]["start"],
+                    "end": values["appointment"]["end"],
+                    "grain": 15 * 60,
+                }
                 values["appointment_time"] = matching_slots[0].strftime(
                     "%A, %d %B %Y, %H:%M"
                 )
+                values["matching_slots"] = [matching_slots[0]]
+                values[
+                    "matching_slots_in_human_friendly_format"
+                ] = cls.slots_in_human_friendly_format([matching_slots[0]])
             elif len(matching_slots) > 1:
-                print(f"Found several slots at {matching_slots}")
+                logger.debug(f"Found several slots: {matching_slots}")
                 del values["availability"]
-                raise ValueError(
-                    "Nathan can do {human_friendly_available_slots_matching_salon_availability}. Any works?"
-                )
-        print(values)
+                if "appointment" in values:
+                    del values["appointment"]
+                values[
+                    "matching_slots_in_human_friendly_format"
+                ] = cls.slots_in_human_friendly_format(matching_slots)
+
+        logger.debug("validated entity values:", values)
         return values
 
     @validator("confirmation", pre=True)
@@ -150,17 +138,31 @@ Nathan's has the following available slots:
         assert v is True, "What information do you need to confirm?"
         return v
 
+    @classmethod
+    def matching_slots(cls, availability: dict):
+        start = datetime.datetime.fromisoformat(availability["start"])
+        end = datetime.datetime.fromisoformat(availability["end"])
+        available_slots = []
+
+        for slot in cls.nathan_available_slots:
+            if start <= slot < end:
+                available_slots.append(slot)
+
+        return available_slots
+
+    @classmethod
+    def slots_in_human_friendly_format(cls, slots: list[datetime.datetime]):
+        human_friendly_dates = [
+            datetime.datetime.strftime(d, "%A %d at %H:%M") for d in slots
+        ]
+        return ", ".join(human_friendly_dates[:-1]) + " or " + human_friendly_dates[-1]
+
     def is_completed(self):
         return self.confirmation is True
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-from langchain.llms import Cohere
-
-# ner_llm = Cohere(temperature=0, client=None, max_tokens=100)
-# chat_llm = Cohere(temperature=0, client=None, max_tokens=100)
-
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),
@@ -178,5 +180,8 @@ process_chain = ProcessChain(
     ],
 )
 
-# console_bot(chain=process_chain, initial_input="Hey")
-gradio_bot(chain=process_chain, initial_input="Hey", title="Duplex Bot").launch()
+gradio_bot(
+    chain=process_chain,
+    initial_input="Hey",
+    title="Duplex Bot",
+).launch()

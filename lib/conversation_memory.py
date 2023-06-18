@@ -18,11 +18,11 @@ class KeyValueStoreMemory(BaseMemory):
         if key in self.memories.keys():
             del self.memories[key]
 
-    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def load_memory_variables(self, inputs: Dict[str, Any] = None) -> Dict[str, Any]:
         return {self.memory_key: self.memories}
 
     def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, Any]) -> None:
-        variables = outputs.get("variables", {})
+        variables = outputs.get(self.memory_key, {})
         for k, v in variables.items():
             self.set(k, v)
 

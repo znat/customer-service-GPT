@@ -11,46 +11,47 @@ from ..utils import convert_list_to_string
 
 DEFAULT_PROMPT = """START CONTEXT
 {{goal}}
+
+Follow these rules when conversing with the Human:
+- You can only use the context and the knowledge you have collected from this conversation to answer the User.
+- You cannot use your pre-existing knowledge of the outside world.
+- When the User asks a question, answer with the context of this conversation only. If the answer is not in the context, say you don't know and repeat your question.
+- If the user does not answer the question, reply and repeat your question.
+- You must predict one and only one AI message.
+- introduce yourself if it's your first message
+
+
 {% if collected|length > 2 %}
-You already collected the following information from the User:
+You already know the following information from the Human:
 
 ```json
 {{collected}}
 ```
 {% endif %}
 {% if remaining|length > 2 %}
-
-You must lead the conversation and ask questions to collect {{remaining_as_string}} as described below and in the same order:
+You don't know {{remaining_as_string}} yet and you have to collect then in the right order:
 
 {{remaining}}
 
 {% endif %}
-
-Rules to follow:
-- You can only use the context and the knowledge you have collected from this conversation to answer the User.
-- You cannot use your pre-existing knowledge of the outside world.
-- When the User asks a question, try answering it with the context of this conversation only. If you can't find the answer in the context, say you don't know and repeat your question.
-- If the user does not answer the question, reply and repeat your question.
-- You must predict one and only one AI message.
-- introduce yourself if it's your first message
+END CONTEXT
 
 {% if errors|length > 2 %}
-Feedback need to be provided to the user due to their latest answer:
-```json
-{{errors}}
-```
+Provide the following feedback to the Human and ask them to correct their answer:
+{{error_message}}
+{% elif errors|length <= 2 and remaining|length > 2 %}
+Ask the `{{next_variable_to_collect}}` of the Human using the "question to ask" defined above.
 {% else %}
-Ask the User to provide `{{next_variable_to_collect}}` using the "question to ask" above.
+You have successfully completed your task. Congratulations!
 {% endif %}
 
-END CONTEXT
 
 {{history}}
 User: {{input}}
 AI:"""
 
 
-class FormPromptTemplate(PromptTemplate):
+class ProcessPromptTemplate(PromptTemplate):
     input_variables: list[str] = [
         "input",
         "history",
@@ -110,7 +111,7 @@ class FormPromptTemplate(PromptTemplate):
     ) -> Tuple[dict[str, Any], str, str]:
         model_schema = self.form.schema()
         fields = model_schema["properties"]
-
+        print("variables::",variables)
         json_object = {}
         for field_name, field_info in fields.items():
             if field_name not in self.get_collected_variables(
@@ -121,7 +122,6 @@ class FormPromptTemplate(PromptTemplate):
                     "variable_name": field_info.get("title", ""),
                 }
                 if field_info.get("question"):
-                    print(variables)
                     json_object[field_name]["question"] = Template(
                         field_info["question"]
                     ).render(variables)
