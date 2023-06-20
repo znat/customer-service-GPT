@@ -1,10 +1,32 @@
 # 🧑 Customer-Service-GPT
 
-Experimental LLM-native process-driven chatbots.
+A basic toolkit to experiment with LLM-powered process-driven chatbots. Experimental, not meant to be used in a prod setup
 
-Process-driven chatbots assist users in completing tasks by guiding them through a sequence of steps, such as opening a bank account or scheduling an appointment.
+Process-driven chatbots assist users in completing tasks by guiding them through a sequence of steps, such as opening a bank account or scheduling an appointment. They need to provide guardrails, state management, and user input validation.
 
-These bots attempt to enforce business logic and validate user input while remaining resilient to non-linear conversation paths. 
+It seems to work well with `gpt-4`, and sometimes go off tracks with `gpt-3-5`
+
+- [🧑 Customer-Service-GPT](#-customer-service-gpt)
+  - [👷 Install](#-install)
+  - [🎬 Demos](#-demos)
+    - [📅 Appointment booking](#-appointment-booking)
+    - [💇 Duplex clone](#-duplex-clone)
+  - [⚙️ Quick start](#️-quick-start)
+    - [1. Define a process](#1-define-a-process)
+    - [2. Define entities](#2-define-entities)
+    - [3. Instantiate a `ProcessChain`](#3-instantiate-a-processchain)
+  - [Using the `ProcessChain`](#using-the-processchain)
+    - [`process_description`](#process_description)
+    - [Process completion and `Result`](#process-completion-and-result)
+    - [Validation and working variables](#validation-and-working-variables)
+      - [Validating a single field](#validating-a-single-field)
+      - [Cross-valudation and working variables](#cross-valudation-and-working-variables)
+      - [Interpolation](#interpolation)
+  - [Using the `NERChain`](#using-the-nerchain)
+    - [Basics](#basics)
+      - [Value and context](#value-and-context)
+      - [DateTimeEntity (using LLMs to parse entities)](#datetimeentity-using-llms-to-parse-entities)
+
 
 ## 👷 Install
 
@@ -44,7 +66,7 @@ poetry run python example_booking_bot.py
 <img align="center" src="./google_duplex_demo.gif" alt="demonstration" width=500>
 </div>
 
-## ⚙️ How it works
+## ⚙️ Quick start
 
 The `ProcessChain` is a sequential [Langchain](https://github.com/hwchase17/langchain) chain working as follows:
 
@@ -54,7 +76,7 @@ The `ProcessChain` is a sequential [Langchain](https://github.com/hwchase17/lang
 
 The `ProcessChain` outputs a `result` object with the information collected when the task is completed.
 
-### The Process definition
+### 1. Define a process
 The process is a pydantic model where fields are described.
 The fields will be collected during the process using the questions provided, validated with the validators and the errors messages will be surfaced in the conversation.
 
@@ -98,7 +120,7 @@ Your goal is to collect the required information from the User to open a bank ac
         return v  
     
 ```
-### Entities
+### 2. Define entities
 
 Although entities generally match form fields, they are not the same. Entities are extracted from the user input, then processed by the `ValidationChain` which may decide to save values to variables.
 
@@ -134,12 +156,12 @@ examples = [
 ```
 Notice that the `value` might not be related to a particular substring in the `text`. Observe the last two examples which aim to capture a confirmation based on a yes or no. We want the entity to be extracted only in the `context` of confirming data, but not if the `context` of answering a specific question.
 
-### The `ProcessChain`
+### 3. Instantiate a `ProcessChain`
 The `ProcessChain` glues everything together.
 
 ```python
 openai_entity_extractor_llm = ChatOpenAI(temperature=0, client=None, max_tokens=256)
-openai_chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=256)
+openai_chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=256, model="gpt-4) # Note: wor
 
 process_chain = ProcessChain(
     ner_llm=openai_entity_extractor_llm,
@@ -165,18 +187,186 @@ gradio_bot(chain=process_chain, initial_input="hey", title="FormBot").launch() #
 
 See code examples for more details and more complex entities such as dates.
 
-## Notes
+## Using the `ProcessChain`
 
-What would be nice is the possibility to return a rendered object even some values are missing
-So, examples:
-- At validation time, availability results in several slots (e.g 2 in a given day). 
-Currently validation fails with an error message with a placeholder.
-But the validation didnt really fail, availability is valid, just that we need to ask the user to choose one of the slots
-One ooption:
-- All fields optional
-- completion handled with `is_completed` which by default checks that all fields are non null
-Example:
-- user communicates availability. Stored in availability
-- pydantic validation calculates available slots and stores them in available_slots.
-- available_slots question is surfaced in the prompt. Validation checks that the answer from the user fit in the available slots.
-- the availability question is reprompted and formatted with `prompted_slots`
+### `process_description`
+
+A process contains a `process_description` that will be injected in the prompt. Here is an example:
+
+```python
+    process_description = f"""
+You are a hair salon attendant AI. The User wants to book and appointment
+
+You can share the following information with the User if the User asks:
+- Address of the salon is 123 Main Street, CoolVille, QC, H3Z 2Y7
+- The salon phone number is 514-666-7777
+
+To all other questions reply you don't know. 
+
+"""
+```
+
+### Process completion and `Result`
+
+A process yield a completion `Result` so the `ProcessChain` can be invoked by other chain. The idea is that the `ProcessChain` can be ran as a `while` loop until a `Result` object is output.
+
+To ouput a result you can use the two following `Process` methods:
+
+```python
+class MyProcess(Process):
+    ...
+    def is_completed(self) -> bool:
+        return ... # A sucess condition, e.g a confirmation set to `True`
+    
+    def is_failed(self) -> bool:
+        return ... # A failure condition, e.g an error counter reaching a certain value
+```
+
+### Validation and working variables
+
+A `Process` is a `pydantic` model and thus leverages built-in validation methods.
+
+#### Validating a single field
+
+```python
+phone_number: Optional[str] = Field(
+    name="Phone number",
+    description="Phone number of the user, required to contact a patient in case of unexpected events, such as delays or cancellations",
+    question="What is your phone number?",
+)
+
+@validator("phone_number")
+def validate_phone_number(cls, v):
+    import re
+
+    pattern = re.compile(r"^\d{3}-\d{3}-\d{4}$")
+    assert v is None or pattern.match(
+        v
+    ), f"Can you please provide a valid phone number using the XXX-XXX-XXXX format?"
+    return v
+```
+
+#### Cross-valudation and working variables
+
+If you need to use another variable for your validation or want to set a variable based on the content of another you can use the pydantic `@root_validator`:
+
+
+```python
+class MyProcess(Process):
+
+    # This field has a question, so the question will be asked to the user
+    availability: Optional[dict | str] = Field(
+        title="Availability for doctor appointment",
+        question="Would you be available {{matching_slots_in_human_friendly_format}}",
+        description=f"Providing availability helps finding an available slot in the salon's calendar",
+    )
+
+    # This field has NO question, so it will not be surfaced by the user
+    # but can used as a working/internal processing variable.
+    appointment_time: Optional[str] = Field(
+        title="Appointment in human frendly format",
+    )
+    @root_validator(pre=True)
+    def validate(cls, values: dict):
+        ...
+        # Let's define a default value in case no availability is provided yet or
+        # there is no matching slot between the user availability and the salon availability
+        values["appointment_time"] = ... # Add some logic to set appointement time
+        ...
+        return values
+```
+
+#### Interpolation
+
+All variables can be interpolated in questions. For example, the `appointment_time` could be used later in the process.
+
+```python
+class MyProcess(process):
+    ...
+    # This var is set by the validator.
+    appointment_time: Optional[str] = Field(
+        title="Appointment in human frendly format",
+    )
+
+    # And can be used in another question
+    confirm: Optional[str] = Field(
+        title="Do you confirm the appointment on {{appointment_time}}?",
+    )
+```
+
+## Using the `NERChain`
+
+### Basics
+
+The `NERChain` is a simple few-shots named entity regognition. It is used by the `ProcessChain` but you can also experiment directly with it.
+
+```python
+examples =[
+    {
+        "text": "I'm Jo Neville and I'm a plumber",
+        "entities": [
+            {"name": "first_name", "value": "Jo"},
+            {"name": "last_name", "value": "Neville"},
+            {"name": "occupation", "value": "plumber"},
+        ],
+    },
+    ...
+]
+
+entities = {
+    "first_name": Entity,
+    "last_name": Entity,
+    "occupation": Entity,
+    "email": EmailEntity,
+}
+
+ner_chain = NERChain(
+    llm=entity_extractor_llm,
+    additional_instructions="""
+"confirmation" entity should only be `true` if the gives an explicity confirmation that all the collected information is correct
+and not if the user just says "yes" or confirms but asks follow-up questions.
+    """,
+    verbose=True,
+    entities=entities,
+    examples=[EntityExample.parse_obj(e) for e in examples],
+)
+```
+
+#### Value and context
+The context is the last bot utterance prior the user utterance were entities are extracted,
+A benefit of LLMs is they pickup simple transformations quite well. The entity value does not need to be 
+a substring of the user utterance (`text`). In the following example, the context helps the model understand what 
+*"The second option"* is referring to
+
+```yaml
+- context: 'I can propose Wednesday 14 at 09:00, Friday 16 at 11:00 or Sunday 18 at 11:00.'
+  text: 'the second option is great'
+  entities:
+      - name: availability
+        value: 'Friday 16 at 11:00'
+```
+
+#### DateTimeEntity (using LLMs to parse entities)
+
+The `DateTimeEntity` is an illlustration of how an LLM can be use for more rigourous and structured transformation.
+`DateTimeEntity` will output an ISO formatted timespan. Here are a few examples:
+
+```
+text: "Any availability next week?"
+entities:
+[
+   {
+      "name":"availability",
+      "value":{
+         "start":"2023-06-26T00:00:00",
+         "end":"2023-07-02T23:59:59",
+         "grain":604800
+      }
+   }
+]
+```
+
+You can try it with:
+```
+poetry run python example_ner_chain.py
+```

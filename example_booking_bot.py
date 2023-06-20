@@ -21,14 +21,13 @@ logger = setup_logger(__name__)
 # Some calendar availability the bot can use
 now = datetime.datetime.now()
 
-# Let's populate the salon calendar with some availability.
-# The bot will match users availability with the salon calendar.
-
-
-# Use the join() function to create a string with the bulleted list of dates
-
 
 class AppointmentBookingProcess(Process):
+    """
+    This process is a simple appointment booking process."""
+    
+    # Let's populate the salon calendar with some availability.
+    # The bot will match users availability with the salon calendar.
     salon_available_slots: ClassVar[list[datetime.datetime]] = [
         # Tomorrow 9am
         datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
@@ -66,6 +65,7 @@ class AppointmentBookingProcess(Process):
         datetime.datetime(now.year, now.month, now.day + 10, 2, 0),
     ]
 
+    # The process description will be injected in the prompt template.
     process_description = f"""
 You are a hair salon attendant AI. The User wants to book and appointment
 
@@ -125,7 +125,7 @@ To all other questions reply you don't know.
     )
 
     @classmethod
-    def matching_slots(cls, availability: dict):
+    def get_matching_slots(cls, availability: dict):
         start = datetime.datetime.fromisoformat(availability["start"])
         end = datetime.datetime.fromisoformat(availability["end"])
         available_slots = []
@@ -156,7 +156,7 @@ To all other questions reply you don't know.
             random.sample(cls.salon_available_slots, 3)
         )
         if values.get("availability") is not None:
-            matching_slots = cls.matching_slots(values["availability"])
+            matching_slots = cls.get_matching_slots(values["availability"])
             if len(matching_slots) == 0:
                 del values["availability"]
             elif len(matching_slots) == 1:

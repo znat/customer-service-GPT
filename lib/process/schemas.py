@@ -9,6 +9,9 @@ class Process(BaseModel):
     def is_completed(self) -> bool:
         return True
     
+    def is_failed(self) -> bool:
+        return False
+    
     @root_validator(pre=True)
     def all_fields_optional(cls, values):
         for field_name, field_value in values.items():

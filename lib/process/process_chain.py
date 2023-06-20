@@ -44,7 +44,7 @@ class ProcessChain(SequentialChain):
             FormValidationChain(
                 input_variables=["entities"],
                 output_variables=["variables", "result"],
-                form=values["form"],
+                process=values["process"],
                 memory=values["memory"],
                 callbacks=values.get("callbacks"),
                 verbose=values["verbose"],
@@ -55,7 +55,7 @@ class ProcessChain(SequentialChain):
                 callbacks=values.get("callbacks"),
                 prompt=ProcessPromptTemplate(
                     input_variables=["input", "history", "variables"],
-                    form=values["form"],
+                    process=values["process"],
                     validate_template=False,
                 ),
                 memory=values["memory"],

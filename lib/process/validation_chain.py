@@ -14,7 +14,7 @@ logger = setup_logger(__name__)
 
 class FormValidationChain(Chain):
     completed_variable: str = "_completed"
-    form: Type[Process]
+    process: Type[Process]
     input_variables: List[str]
     output_variables: List[str]
     memory: ConversationMemory
@@ -45,7 +45,7 @@ class FormValidationChain(Chain):
     def load_variables(
         self, variables: Optional[Dict[str, Any]] = {}
     ) -> Dict[str, Any]:
-        for field in self.form.__fields__.keys():
+        for field in self.process.__fields__.keys():
             if field not in variables.keys():
                 stored_value = self.memory.kv_store.get(field)
                 if stored_value is not None:
@@ -53,7 +53,7 @@ class FormValidationChain(Chain):
         return variables
 
     def save_variables(self, variables: Dict[str, Any]) -> None:
-        for field in self.form.__fields__.keys():
+        for field in self.process.__fields__.keys():
             if field in variables.keys():
                 self.memory.kv_store.set(field, variables[field])
             else:
@@ -61,7 +61,7 @@ class FormValidationChain(Chain):
 
     def validate(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         # Just to raise the "All fields should be optional" error if applicable
-        self.form()
+        self.process()
         try:
             entities = json.loads(inputs["entities"])
         except json.JSONDecodeError as e:
@@ -71,15 +71,17 @@ class FormValidationChain(Chain):
         errors: dict = {}
         result: Result | None = None
         try:
-            if self.verbose:
-                logger.debug("Current variables:", variables)
-            data = self.form.parse_obj(variables)
+            logger.debug("Current variables:", variables)
+            data = self.process.parse_obj(variables)
             logger.debug("Process model pre-validation:", data.dict())
             self.save_variables(data.dict())
             logger.debug("Process model post-validation:", data.dict())
             
             if data.is_completed():
                 result = Result(status=Status.completed, result=data, errors=None)
+                logger.debug(f"Process result: ${result.dict()}")
+            if data.is_completed():
+                result = Result(status=Status.failed, result=data, errors=None)
                 logger.debug(f"Process result: ${result.dict()}")
             self.memory.kv_store.set("_errors", {})
             variables = self.memory.kv_store.load_memory_variables()["variables"]

@@ -1,16 +1,17 @@
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
+from langchain.llms import Cohere
 from rich.console import Console
 from rich.prompt import Prompt
 
-from .lib.ner.entities.basic_entities import (BooleanEntity, EmailEntity,
+
+from lib.ner.entities.basic_entities import (BooleanEntity, EmailEntity,
                                               Entity, EntityExample, IntEntity)
-from .lib.ner.ner_chain import NERChain
+from lib.ner.entities.datetime_entity import DateTimeEntity
+from lib.ner.ner_chain import NERChain
 
 entity_extractor_llm = ChatOpenAI(
     temperature=0, client=None, max_tokens=256, model="gpt-3.5-turbo"
 )
-ada_extractor_llm = OpenAI(temperature=0, client=None, max_tokens=256, model="ada")
 
 examples = [
     {"text": "I'm Nathan", "entities": [{"name": "first_name", "value": "Nathan"}]},
@@ -53,7 +54,7 @@ examples = [
 
 examples = [EntityExample.parse_obj(e) for e in examples]
 entities = {
-    "first_name": Entity,
+    "availability": DateTimeEntity,
     "age": IntEntity,
     "email": EmailEntity,
     "last_name": Entity,
@@ -72,7 +73,6 @@ and not if the user just says "yes" or confirms but asks follow-up questions.
     examples=examples,
 )
 
-
 import sys
 
 if __name__ == "__main__":
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         input = sys.argv[1]
         context = sys.argv[2]
     else:
-        input = Prompt.ask("Input")
+        input = Prompt.ask("Text")
         context = Prompt.ask("Context")
     entities = ner_chain.run(
         {

@@ -60,7 +60,7 @@ class ProcessPromptTemplate(PromptTemplate):
 
     template_format: str = "jinja2"
     validate_template: bool = True
-    form: Type[Process]
+    process: Type[Process]
 
     def format(self, **kwargs: Any) -> str:
         collected = self.get_collected_variables(kwargs["variables"])
@@ -79,11 +79,11 @@ class ProcessPromptTemplate(PromptTemplate):
         next_variable_question = ""
         if next_variable_to_collect is not None:
             next_variable_question = Template(
-                self.form.schema()["properties"][next_variable_to_collect]["question"]
+                self.process.schema()["properties"][next_variable_to_collect]["question"]
             ).render(**kwargs["variables"])
 
         return super().format(
-            goal=self.form.process_description,
+            goal=self.process.process_description,
             remaining=remaining_as_list,
             collected=json.dumps(collected, indent=2),
             error_message=error_message,
@@ -109,7 +109,7 @@ class ProcessPromptTemplate(PromptTemplate):
     def get_remaining_variables_to_collect(
         self, variables: dict[str, Any] = {}
     ) -> Tuple[dict[str, Any], str, str]:
-        model_schema = self.form.schema()
+        model_schema = self.process.schema()
         fields = model_schema["properties"]
         print("variables::",variables)
         json_object = {}

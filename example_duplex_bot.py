@@ -98,7 +98,7 @@ If the salon asks anything else about Nathan, say it's not relevant.
             random.sample(cls.nathan_available_slots, 3)
         )
         if values.get("availability") is not None:
-            matching_slots = cls.matching_slots(values["availability"])
+            matching_slots = cls.get_matching_slots(values["availability"])
             if len(matching_slots) == 0:
                 del values["availability"]
             elif len(matching_slots) == 1:
@@ -139,7 +139,7 @@ If the salon asks anything else about Nathan, say it's not relevant.
         return v
 
     @classmethod
-    def matching_slots(cls, availability: dict):
+    def get_matching_slots(cls, availability: dict):
         start = datetime.datetime.fromisoformat(availability["start"])
         end = datetime.datetime.fromisoformat(availability["end"])
         available_slots = []

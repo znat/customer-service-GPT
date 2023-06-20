@@ -115,7 +115,9 @@ class DateTimeEntity(Entity):
 
         # Thursday 2pm
         start_thursday_2pm = thursday_2pm.isoformat()
-        end_thursday_2pm = (thursday_2pm + datetime.timedelta(hours=1, seconds=-1)).isoformat()
+        end_thursday_2pm = (
+            thursday_2pm + datetime.timedelta(hours=1, seconds=-1)
+        ).isoformat()
         examples.append(
             {
                 "text": "Thursday 2pm",
@@ -246,7 +248,6 @@ def main():
             "text": "let's go with the last one",
             "entities": [{"name": "datetime", "value": "Sunday 11 at 8:00"}],
         },
-        
     ]
 
     openai_entity_extractor_llm = ChatOpenAI(
@@ -259,10 +260,26 @@ def main():
         entities={"datetime": DateTimeEntity},
         examples=[EntityExample.parse_obj(e) for e in examples],
     )
-    res = ner_chain.run(
-        {"history": "AI: Would you be available Friday 09 at 14:00 Friday 09 at 18:00 or Sunday 18 at 6:00?", "input": "Let's go with the third"}
-    )
-    print(res)
+
+    from rich.console import Console
+    from rich.prompt import Prompt
+    import sys
+
+    if __name__ == "__main__":
+        console = Console()
+        if len(sys.argv) > 2:
+            input = sys.argv[1]
+            context = sys.argv[2]
+        else:
+            input = Prompt.ask("Input")
+            context = Prompt.ask("Context")
+        entities = ner_chain.run(
+            {
+                "input": input,
+                "history": f"User: Hello\nAI: {context}",
+            }
+        )
+        console.print(entities)
 
 
 if __name__ == "__main__":
