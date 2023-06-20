@@ -208,7 +208,7 @@ To all other questions reply you don't know.
 
 ### Process completion and `Result`
 
-A process yield a completion `Result` so the `ProcessChain` can be invoked by other chain. The idea is that the `ProcessChain` can be ran as a `while` loop until a `Result` object is output.
+A process yield a completion `Result` so the `ProcessChain` can be invoked by other chain. The `ProcessChain` can execute in a `while` loop until a `Result` object is output.
 
 To ouput a result you can use the two following `Process` methods:
 
