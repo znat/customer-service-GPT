@@ -16,12 +16,8 @@ from lib.process.process_chain import ProcessChain
 from lib.process.schemas import Process
 
 logger = setup_logger(__name__)
-
-
 # Some calendar availability the bot can use
 now = datetime.datetime.now()
-
-
 class AppointmentBookingProcess(Process):
     """
     This process is a simple appointment booking process."""
@@ -67,7 +63,7 @@ class AppointmentBookingProcess(Process):
 
     # The process description will be injected in the prompt template.
     process_description = f"""
-You are a hair salon attendant AI. The User wants to book and appointment
+You are a hair salon AI attendant and you are happy to help the Human book an appointment.
 
 You can share the following information with the User if the User asks:
 - Address of the salon is 123 Main Street, CoolVille, QC, H3Z 2Y7
@@ -116,10 +112,6 @@ To all other questions reply you don't know.
         description="We need a confirmation to make sure we have the right information before we book.",
     )
 
-    matching_slots: Optional[list[datetime.datetime]] = Field(
-        title="Matching slots",
-    )
-
     matching_slots_in_human_friendly_format: Optional[str] = Field(
         title="Matching slots in human frendly format",
     )
@@ -138,18 +130,24 @@ To all other questions reply you don't know.
 
     @classmethod
     def slots_in_human_friendly_format(cls, slots: list[datetime.datetime]):
-        human_friendly_dates = [
-            datetime.datetime.strftime(d, "%A %d at %H:%M") for d in slots
-        ]
-        return ", ".join(human_friendly_dates[:-1]) + " or " + human_friendly_dates[-1]
+        if len(slots) == 0:
+            return ""
+        elif len(slots) == 1:
+            return datetime.datetime.strftime(slots[0], "%A %d at %H:%M")
+        else:
+            human_friendly_dates = [
+                datetime.datetime.strftime(d, "%A %d at %H:%M") for d in slots
+            ]
+            return ", ".join(human_friendly_dates[:-1]) + " or " + human_friendly_dates[-1]
 
     def is_completed(self):
         return self.confirmation is True
 
-    @root_validator(pre=True)
+    @root_validator()
     def validate(cls, values: dict):
+        values["_errors"] = {}
         # Let's define a default value in case no availability is provided yet or
-        # there is no matching slot between the user availability and the salon availability
+        # there is no matching slot between the Nathan's availability and the salon's availability
         values[
             "matching_slots_in_human_friendly_format"
         ] = cls.slots_in_human_friendly_format(
@@ -158,37 +156,48 @@ To all other questions reply you don't know.
         if values.get("availability") is not None:
             matching_slots = cls.get_matching_slots(values["availability"])
             if len(matching_slots) == 0:
+                logger.debug("No matching slot found")
                 del values["availability"]
+                del values["matching_slots_in_human_friendly_format"]
+                values["_errors"][
+                    "availability"
+                ] = "Unfortunately not, but we can offer {{matching_slots_in_human_friendly_format}}"
+
             elif len(matching_slots) == 1:
                 logger.debug(f"Found a slot at {matching_slots[0]}")
-                values["appointment"] = {
-                    "start": matching_slots[0].isoformat(),
-                    "end": (
-                        matching_slots[0] + datetime.timedelta(minutes=15)
-                    ).isoformat(),
-                }
-                values["availability"] = {
-                    "start": values["appointment"]["start"],
-                    "end": values["appointment"]["end"],
-                    "grain": 15*60,
-                }
-                values["appointment_time"] = matching_slots[0].strftime(
-                    "%A, %d %B %Y, %H:%M"
-                )
-                values["matching_slots"] = [matching_slots[0]]
-                values[
-                    "matching_slots_in_human_friendly_format"
-                ] = cls.slots_in_human_friendly_format([matching_slots[0]])
+                if values["availability"]["grain"] > 60 * 60:
+                    del values["availability"]
+                    values[
+                        "matching_slots_in_human_friendly_format"
+                    ] = cls.slots_in_human_friendly_format([matching_slots[0]])
+                    values["_errors"]["availability"] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
+                else:
+                    values["appointment"] = {
+                        "start": matching_slots[0].isoformat(),
+                        "end": (
+                            matching_slots[0] + datetime.timedelta(minutes=15)
+                        ).isoformat(),
+                    }
+                    values["availability"] = {
+                        "start": values["appointment"]["start"],
+                        "end": values["appointment"]["end"],
+                        "grain": 15 * 60,
+                    }
+                    values["appointment_time"] = matching_slots[0].strftime(
+                        "%A, %d %B %Y, %H:%M"
+                    )
+                    values[
+                        "matching_slots_in_human_friendly_format"
+                    ] = cls.slots_in_human_friendly_format([matching_slots[0]])
             elif len(matching_slots) > 1:
-                logger.debug(f"Found several slots")
+                logger.debug(f"Found several slots: {matching_slots}")
                 del values["availability"]
-                if "appointment" in values:
-                    del values["appointment"]
                 values[
                     "matching_slots_in_human_friendly_format"
                 ] = cls.slots_in_human_friendly_format(matching_slots)
-       
-        logger.debug("validated entity values:", values)
+                values["_errors"]["availability"] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
+
+        logger.debug(f"validated process values: {values}")
         return values
 
     @validator("first_name")
@@ -218,7 +227,7 @@ To all other questions reply you don't know.
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),
@@ -247,5 +256,5 @@ and not if the user just says "yes" or confirms but asks follow-up questions.
 gradio_bot(
     chain=process_chain,
     title="Appointment Booking",
-    initial_input="I want to book an appointment",
+    initial_input="Hey",
 ).launch()

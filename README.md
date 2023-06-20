@@ -91,11 +91,13 @@ Your goal is to collect the required information from the User to open a bank ac
         description="First name of the user, required to open an account",
         question="What is your first name?",
     )
+
     age: int = Field(
         name="Age",
         description="Age of the user, required to open an account",
         question="What is your age?",
     )
+
     confirmed: bool = Field(
         name="Confirmed",
         description="Whether the user has confirmed their details",
@@ -228,6 +230,9 @@ A `Process` is a `pydantic` model and thus leverages built-in validation methods
 
 #### Validating a single field
 
+One way to validate is to make an assertion in a field `@validator` function.
+The error message will be surfaced to the user. 
+
 ```python
 phone_number: Optional[str] = Field(
     name="Phone number",
@@ -245,6 +250,8 @@ def validate_phone_number(cls, v):
     ), f"Can you please provide a valid phone number using the XXX-XXX-XXXX format?"
     return v
 ```
+
+Note that you can also interpolate variables in the error message as follows: `{{variables}}`
 
 #### Cross-valudation and working variables
 
@@ -275,6 +282,22 @@ class MyProcess(Process):
         ...
         return values
 ```
+
+If you want to surface validation errors but still need the object to be successfully instantiated so that updated variables are available in the conversation or can be interpolated, you can also add errors as follows in the `@root_validator`
+
+```python
+    @root_validator(pre=True)
+    def validate(cls, values: dict):
+        ...
+        values["_errors"] = {
+            # the key is the variable for which the feedback is given
+            "availability": "Sorry, we're not available at these dates, but we can offer {{other_slots}}
+        }
+        ...
+        return values
+```
+
+This should be surfaced to the user in the next AI message.
 
 #### Interpolation
 

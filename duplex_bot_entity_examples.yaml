@@ -79,13 +79,13 @@
   entities:
       - name: confirmation
         value: false
-- context: Can we confirm the appointment for Nathan on Thursday, June 15th at 15:00 for a man's haircut?
-  text: 'Yes, the appointment is confirmed'
+- context: We can propose you Monday 24 at 9:00. Would that work?
+  text: 'Yes'
   entities:
-      - name: confirmation
-        value: true
-- context: Great! I'd like to book a man's haircut appointment for Nathan on Thursday, June 15th at 15:00. So is the 15:00 appointment confirmed?
-  text: 'Yes, what is his first name?'
+      - name: availability
+        value: 'Monday 24 at 9:00'
+- context: We can propose you Tuesday 25 at 14:00. Would that work?
+  text: 'That works'
   entities:
-      - name: confirmation
-        value: false
+      - name: availability
+        value: 'Tuesday 25 at 14:00'

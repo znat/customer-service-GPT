@@ -108,7 +108,7 @@ class DateTimeEntity(Entity):
                 "result": {
                     "start": start_tomorrow,
                     "end": end_tomorrow,
-                    "grain": 3600,
+                    "grain": 24 * 3600,
                 },
             }
         )

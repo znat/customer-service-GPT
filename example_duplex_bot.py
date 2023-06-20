@@ -43,7 +43,7 @@ class DuplexProcess(Process):
     ]
 
     process_description = f"""
-You are Nathan's AI assistant. Nathan needs a haircut and you need to book an appointment with the salon.
+You are Nathan's AI assistant. Nathan desperately needs a haircut and you would like to book an appointment with the salon.
 The salon is the Human.
 If the Human asks, you can share the following information about Nathan:
 - Nathan's first name
@@ -80,16 +80,13 @@ If the salon asks anything else about Nathan, say it's not relevant.
         title="Appointment slot ISO datetimes",
     )
 
-    matching_slots: Optional[list[datetime.datetime]] = Field(
-        title="Matching slots",
-    )
-
     matching_slots_in_human_friendly_format: Optional[str] = Field(
         title="Matching slots in human frendly format",
     )
 
-    @root_validator(pre=True)
+    @root_validator()
     def validate(cls, values: dict):
+        values["_errors"] = {}
         # Let's define a default value in case no availability is provided yet or
         # there is no matching slot between the Nathan's availability and the salon's availability
         values[
@@ -100,37 +97,48 @@ If the salon asks anything else about Nathan, say it's not relevant.
         if values.get("availability") is not None:
             matching_slots = cls.get_matching_slots(values["availability"])
             if len(matching_slots) == 0:
+                logger.debug("No matching slot found")
                 del values["availability"]
+                del values["matching_slots_in_human_friendly_format"]
+                values["_errors"][
+                    "availability"
+                ] = "Unfortunately not, but we can offer {{matching_slots_in_human_friendly_format}}"
+
             elif len(matching_slots) == 1:
                 logger.debug(f"Found a slot at {matching_slots[0]}")
-                values["appointment"] = {
-                    "start": matching_slots[0].isoformat(),
-                    "end": (
-                        matching_slots[0] + datetime.timedelta(minutes=15)
-                    ).isoformat(),
-                }
-                values["availability"] = {
-                    "start": values["appointment"]["start"],
-                    "end": values["appointment"]["end"],
-                    "grain": 15 * 60,
-                }
-                values["appointment_time"] = matching_slots[0].strftime(
-                    "%A, %d %B %Y, %H:%M"
-                )
-                values["matching_slots"] = [matching_slots[0]]
-                values[
-                    "matching_slots_in_human_friendly_format"
-                ] = cls.slots_in_human_friendly_format([matching_slots[0]])
+                if values["availability"]["grain"] > 60 * 60:
+                    del values["availability"]
+                    values[
+                        "matching_slots_in_human_friendly_format"
+                    ] = cls.slots_in_human_friendly_format([matching_slots[0]])
+                    values["_errors"]["availability"] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
+                else:
+                    values["appointment"] = {
+                        "start": matching_slots[0].isoformat(),
+                        "end": (
+                            matching_slots[0] + datetime.timedelta(minutes=15)
+                        ).isoformat(),
+                    }
+                    values["availability"] = {
+                        "start": values["appointment"]["start"],
+                        "end": values["appointment"]["end"],
+                        "grain": 15 * 60,
+                    }
+                    values["appointment_time"] = matching_slots[0].strftime(
+                        "%A, %d %B %Y, %H:%M"
+                    )
+                    values[
+                        "matching_slots_in_human_friendly_format"
+                    ] = cls.slots_in_human_friendly_format([matching_slots[0]])
             elif len(matching_slots) > 1:
                 logger.debug(f"Found several slots: {matching_slots}")
                 del values["availability"]
-                if "appointment" in values:
-                    del values["appointment"]
                 values[
                     "matching_slots_in_human_friendly_format"
                 ] = cls.slots_in_human_friendly_format(matching_slots)
+                values["_errors"]["availability"] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
 
-        logger.debug("validated entity values:", values)
+        logger.debug(f"validated process values: {values}")
         return values
 
     @validator("confirmation", pre=True)

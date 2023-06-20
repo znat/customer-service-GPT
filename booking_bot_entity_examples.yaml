@@ -165,3 +165,13 @@
   entities:
       - name: confirmation
         value: true
+- context: We can propose you Monday 24 at 9:00. Would that work?
+  text: 'Yes'
+  entities:
+      - name: availability
+        value: 'Monday 24 at 9:00'
+- context: We can propose you Tuesday 25 at 14:00. Would that work?
+  text: 'That works'
+  entities:
+      - name: availability
+        value: 'Tuesday 25 at 14:00'

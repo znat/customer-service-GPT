@@ -5,9 +5,11 @@ from jinja2 import Template
 from langchain.prompts.prompt import PromptTemplate
 from pydantic import BaseModel, root_validator
 
-from .schemas import Process
+from lib.logger_config import setup_logger
 
+logger = setup_logger(__name__)
 from ..utils import convert_list_to_string
+from .schemas import Process
 
 DEFAULT_PROMPT = """START CONTEXT
 {{goal}}
@@ -36,18 +38,21 @@ You don't know {{remaining_as_string}} yet and you have to collect then in the r
 {% endif %}
 END CONTEXT
 
-{% if errors|length > 2 %}
-Provide the following feedback to the Human and ask them to correct their answer:
-{{error_message}}
-{% elif errors|length <= 2 and remaining|length > 2 %}
-Ask the `{{next_variable_to_collect}}` of the Human using the "question to ask" defined above.
-{% else %}
-You have successfully completed your task. Congratulations!
-{% endif %}
 
 
 {{history}}
 User: {{input}}
+
+{% if error_message %}
+Provide the following feedback to the Human: "{{error_message}}"
+(the Human is allowed to provide an answer to another question to ask)
+{% elif not error_message and remaining|length > 2 %}
+Ask the `{{next_variable_to_collect}}` of the Human using the "question to ask" defined above.
+(the Human is allowed to provide an answer to another question to ask)
+{% else %}
+You have successfully completed your task. Congratulations!
+{% endif %}
+
 AI:"""
 
 
@@ -69,17 +74,24 @@ class ProcessPromptTemplate(PromptTemplate):
             remaining,
             remaining_as_list,
         ) = self.get_remaining_variables_to_collect(kwargs["variables"])
+
         errors: dict | None = kwargs["variables"].get("_errors")
+                
         error_message = (
             errors.get(list(errors.keys())[0]) if errors and len(errors) else None
         )
+        if error_message is not None:
+            error_message = Template(error_message).render(**kwargs["variables"])
+
         next_variable_to_collect = (
             list(remaining_dict.keys())[0] if len(remaining_dict.keys()) > 0 else None
         )
         next_variable_question = ""
         if next_variable_to_collect is not None:
             next_variable_question = Template(
-                self.process.schema()["properties"][next_variable_to_collect]["question"]
+                self.process.schema()["properties"][next_variable_to_collect][
+                    "question"
+                ]
             ).render(**kwargs["variables"])
 
         return super().format(
@@ -111,7 +123,7 @@ class ProcessPromptTemplate(PromptTemplate):
     ) -> Tuple[dict[str, Any], str, str]:
         model_schema = self.process.schema()
         fields = model_schema["properties"]
-        print("variables::",variables)
+        logger.debug(f"variables: {variables}")
         json_object = {}
         for field_name, field_info in fields.items():
             if field_name not in self.get_collected_variables(

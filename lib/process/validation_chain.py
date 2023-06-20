@@ -61,32 +61,31 @@ class FormValidationChain(Chain):
 
     def validate(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         # Just to raise the "All fields should be optional" error if applicable
-        self.process()
+        self.process() # type: ignore
         try:
             entities = json.loads(inputs["entities"])
         except json.JSONDecodeError as e:
             entities = []
 
         variables = self.load_variables({d["name"]: d["value"] for d in entities})
-        errors: dict = {}
         result: Result | None = None
         try:
-            logger.debug("Current variables:", variables)
+            logger.debug(f"Current variables: {variables}", )
             data = self.process.parse_obj(variables)
-            logger.debug("Process model pre-validation:", data.dict())
             self.save_variables(data.dict())
-            logger.debug("Process model post-validation:", data.dict())
+            logger.debug(f"Process model post-validation: {data.dict()}", )
             
             if data.is_completed():
                 result = Result(status=Status.completed, result=data, errors=None)
-                logger.debug(f"Process result: ${result.dict()}")
-            if data.is_completed():
+                logger.debug(f"Process result: {result.dict()}")
+            if data.is_failed():
                 result = Result(status=Status.failed, result=data, errors=None)
-                logger.debug(f"Process result: ${result.dict()}")
+                logger.debug(f"Process result: {result.dict()}")
             self.memory.kv_store.set("_errors", {})
             variables = self.memory.kv_store.load_memory_variables()["variables"]
+            variables["_errors"] = data._errors
         except ValidationError as e:
-            logger.debug("Validation error:", e)
+            logger.debug(f"Validation error: {e}",)
             errors = self.convert_validation_error_to_dict(e, "assertion")
             variables = {
                 k: v
@@ -97,6 +96,7 @@ class FormValidationChain(Chain):
             }
             logger.debug("Variables after validation errors:", variables)
             variables["_errors"] = errors
+        logger.debug(f"variables after validation: {variables}")
         return {"variables": variables, "result": result.dict() if result else None}
 
     @staticmethod
