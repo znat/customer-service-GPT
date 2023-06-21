@@ -1,7 +1,15 @@
+- text: "We have availability with James, our most senior hair designer on Thursday, would that work?"
+  entities:
+      - name: availability
+        value: 'Thursday'
 - text: "let's go next Thursday at 4pm"
   entities:
       - name: availability
         value: 'next Thursday at 4pm'
+- text: Sorry, our first availability is on Thursday, would that work?
+  entities:
+      - name: availability
+        value: 'Thursday'
 - text: 'What do you have next week?'
   entities:
       - name: availability
@@ -42,7 +50,6 @@
   entities:
       - name: availability
         value: 'Monday'
-
 - context: 'I can propose Tuesday 13 at 17:00. Is that time slot suitable for you?'
   text: 'yes'
   entities:
@@ -72,13 +79,20 @@
   entities:
       - name: confirmation
         value: false
-- context: Can we confirm the appointment for Nathan on Thursday, June 15th at 15:00 for a man's haircut?
-  text: 'Yes, the appointment is confirmed'
+- context: We can propose you Monday 24 at 9:00. Would that work?
+  text: 'Yes'
   entities:
-      - name: confirmation
-        value: true
-- context: Great! I'd like to book a man's haircut appointment for Nathan on Thursday, June 15th at 15:00. So is the 15:00 appointment confirmed?
-  text: 'Yes, what is his first name?'
+      - name: availability
+        value: 'Monday 24 at 9:00'
+- context: We can propose you Tuesday 25 at 14:00. Would that work?
+  text: 'That works'
   entities:
-      - name: confirmation
-        value: false
+      - name: availability
+        value: 'Tuesday 25 at 14:00'
+- context: Would you have some availability on Saturday 24 at 17:00, Thursday 22 at 18:00 or Friday 23 at 13:00 for a haircut appointment?
+  text: 'Just a regular haircut?'
+  entities: []
+- context: "Yes, Nathan is requesting a man haircut. Can we confirm the appointment on Friday 23 at 13:00?"
+  text: 'Would Nathan be available tomorrow?'
+  entities: []
+  

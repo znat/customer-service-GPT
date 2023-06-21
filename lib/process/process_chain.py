@@ -3,7 +3,7 @@ from .schemas import Process
 from ..conversation_memory import ConversationMemory
 from ..ner.entities.basic_entities import Entity, EntityExample
 from .validation_chain import FormValidationChain
-from .process_prompt_template import FormPromptTemplate
+from .process_prompt_template import ProcessPromptTemplate
 from ..ner.ner_chain import NERChain
 from langchain.chains.sequential import SequentialChain
 from typing import Any, Callable, Dict, List, Optional, Type
@@ -19,7 +19,7 @@ class ProcessChain(SequentialChain):
     entities: dict[str, Type[Entity] | tuple[Type[Entity], BaseLanguageModel]]
     entity_examples: list[EntityExample]
     additional_ner_instructions: Optional[str] = ""
-    form: Type[Process]
+    process: Type[Process]
     memory: Optional[ConversationMemory]
     chains: Optional[list[Chain]] = []
     verbose: bool = True
@@ -44,7 +44,7 @@ class ProcessChain(SequentialChain):
             FormValidationChain(
                 input_variables=["entities"],
                 output_variables=["variables", "result"],
-                form=values["form"],
+                process=values["process"],
                 memory=values["memory"],
                 callbacks=values.get("callbacks"),
                 verbose=values["verbose"],
@@ -53,9 +53,9 @@ class ProcessChain(SequentialChain):
                 llm=values["chat_llm"],
                 verbose=values["verbose"],
                 callbacks=values.get("callbacks"),
-                prompt=FormPromptTemplate(
+                prompt=ProcessPromptTemplate(
                     input_variables=["input", "history", "variables"],
-                    form=values["form"],
+                    process=values["process"],
                     validate_template=False,
                 ),
                 memory=values["memory"],

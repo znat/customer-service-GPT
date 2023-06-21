@@ -119,7 +119,7 @@ form_chain = ProcessChain(
         "confirmed": BooleanEntity,
     },
     entity_examples=[EntityExample.parse_obj(e) for e in examples],
-    form=MyForm,
+    process=MyForm,
     memory=ConversationMemory(),
     verbose=True,
 )

@@ -4,7 +4,7 @@ from langchain.prompts.base import StringPromptTemplate
 from pydantic import BaseModel
 from .entities.basic_entities import EntityExample
 
-PROMPT = """
+PROMPT_FEW_SHOTS = """
 Extract entities {variable_names} from the 'text', considering the 'context' as in the following examples.
 
 {additional_instructions}
@@ -21,13 +21,16 @@ context: {{context}}
 text: {{input}}
 entities:"""
 
+PROMPT_FINE_TUNED = """context: {{context}}
+text: {{input}}
+"""
 
 class NERPromptTemplate(StringPromptTemplate):
     input_variables: list[str] = ["input"]
     additional_instructions: Optional[str] = ""
     debug: bool = False
-    template: str = PROMPT
-    examples: list[EntityExample]
+    template: str = None
+    examples: Optional[list[EntityExample]] = None
     entities: dict[str, Type[BaseModel]]
 
     def format(self, **kwargs: Any) -> str:
@@ -37,8 +40,12 @@ class NERPromptTemplate(StringPromptTemplate):
                 example.dict(exclude={"entities": {"__all__": {"description"}}})
                 for example in self.examples
             ]
-        )
-        template = self.template.format(
+        ) if self.examples else ""
+        prompt_template = self.template
+        if self.template is None:
+            prompt_template = PROMPT_FEW_SHOTS if self.examples else PROMPT_FINE_TUNED
+
+        template = prompt_template.format(
             variable_names=variable_names,
             examples=examples,
             additional_instructions=self.additional_instructions,

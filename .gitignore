@@ -20,3 +20,5 @@ archive/structure/examples.py
 archive/stuff/__init__.py
 archive/stuff/entity_memory.py
 .env
+booking_bot_entity_examples.jsonl
+*.jsonl
