@@ -42,9 +42,7 @@ class FormValidationChain(Chain):
     ) -> Dict[str, str]:
         return self.validate(inputs)
 
-    def load_variables(
-        self, variables: Optional[Dict[str, Any]] = {}
-    ) -> Dict[str, Any]:
+    def load_variables(self, variables: Dict[str, Any]) -> Dict[str, Any]:
         for field in self.process.__fields__.keys():
             if field not in variables.keys():
                 stored_value = self.memory.kv_store.get(field)
@@ -61,7 +59,7 @@ class FormValidationChain(Chain):
 
     def validate(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         # Just to raise the "All fields should be optional" error if applicable
-        self.process() # type: ignore
+        self.process()  # type: ignore
         try:
             entities = json.loads(inputs["entities"])
         except json.JSONDecodeError as e:
@@ -70,11 +68,15 @@ class FormValidationChain(Chain):
         variables = self.load_variables({d["name"]: d["value"] for d in entities})
         result: Result | None = None
         try:
-            logger.debug(f"Current variables: {variables}", )
+            logger.debug(
+                f"Current variables: {variables}",
+            )
             data = self.process.parse_obj(variables)
             self.save_variables(data.dict())
-            logger.debug(f"Process model post-validation: {data.dict()}", )
-            
+            logger.debug(
+                f"Process model post-validation: {data.dict()}",
+            )
+
             if data.is_completed():
                 result = Result(status=Status.completed, result=data, errors=None)
                 logger.debug(f"Process result: {result.dict()}")
@@ -85,7 +87,9 @@ class FormValidationChain(Chain):
             variables = self.memory.kv_store.load_memory_variables()["variables"]
             variables["_errors"] = data._errors
         except ValidationError as e:
-            logger.debug(f"Validation error: {e}",)
+            logger.debug(
+                f"Validation error: {e}",
+            )
             errors = self.convert_validation_error_to_dict(e, "assertion")
             variables = {
                 k: v

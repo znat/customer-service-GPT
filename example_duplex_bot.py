@@ -24,28 +24,21 @@ now = datetime.datetime.now()
 
 class DuplexProcess(Process):
     nathan_available_slots: ClassVar[list[datetime.datetime]] = [
-        # Tomorrow 9am
-        datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
-        # Tomorrow 2pm
-        datetime.datetime(now.year, now.month, now.day + 1, 14, 0),
-        # Tomorrow 6pm
-        datetime.datetime(now.year, now.month, now.day + 1, 18, 0),
-        # 2 days later 1pm
-        datetime.datetime(now.year, now.month, now.day + 2, 13, 0),
-        # 12pm in 3 days,
-        datetime.datetime(now.year, now.month, now.day + 3, 12, 0),
-        # 5pm in 3 days,
-        datetime.datetime(now.year, now.month, now.day + 3, 17, 0),
-        # 7am in 4 days,
-        datetime.datetime(now.year, now.month, now.day + 4, 7, 0),
-        # 3pm in 4 days,
-        datetime.datetime(now.year, now.month, now.day + 4, 15, 0),
+        now + datetime.timedelta(days=1, hours=9),
+        now + datetime.timedelta(days=1, hours=14),
+        now + datetime.timedelta(days=1, hours=18),
+        now + datetime.timedelta(days=2, hours=13),
+        now + datetime.timedelta(days=3, hours=12),
+        now + datetime.timedelta(days=3, hours=17),
+        now + datetime.timedelta(days=4, hours=7),
+        now + datetime.timedelta(days=4, hours=15),
     ]
 
     process_description = f"""
-You are Nathan's AI assistant. Nathan desperately needs a haircut and you would like to book an appointment with the salon.
+You are Nathan's AI assistant. You want to book an appointment for a haircut for Nathan with the salon.
 The salon is the Human.
 If the Human asks, you can share the following information about Nathan:
+- Nathan's availability
 - Nathan's first name
 - Requested service is a man haircut
 - Nathan's last name is Zylbersztejn
@@ -111,7 +104,9 @@ If the salon asks anything else about Nathan, say it's not relevant.
                     values[
                         "matching_slots_in_human_friendly_format"
                     ] = cls.slots_in_human_friendly_format([matching_slots[0]])
-                    values["_errors"]["availability"] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
+                    values["_errors"][
+                        "availability"
+                    ] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
                 else:
                     values["appointment"] = {
                         "start": matching_slots[0].isoformat(),
@@ -136,7 +131,9 @@ If the salon asks anything else about Nathan, say it's not relevant.
                 values[
                     "matching_slots_in_human_friendly_format"
                 ] = cls.slots_in_human_friendly_format(matching_slots)
-                values["_errors"]["availability"] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
+                values["_errors"][
+                    "availability"
+                ] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
 
         logger.debug(f"validated process values: {values}")
         return values

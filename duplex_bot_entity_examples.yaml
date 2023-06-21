@@ -89,3 +89,10 @@
   entities:
       - name: availability
         value: 'Tuesday 25 at 14:00'
+- context: Would you have some availability on Saturday 24 at 17:00, Thursday 22 at 18:00 or Friday 23 at 13:00 for a haircut appointment?
+  text: 'Just a regular haircut?'
+  entities: []
+- context: "Yes, Nathan is requesting a man haircut. Can we confirm the appointment on Friday 23 at 13:00?"
+  text: 'Would Nathan be available tomorrow?'
+  entities: []
+  

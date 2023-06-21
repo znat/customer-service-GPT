@@ -25,40 +25,23 @@ class AppointmentBookingProcess(Process):
     # Let's populate the salon calendar with some availability.
     # The bot will match users availability with the salon calendar.
     salon_available_slots: ClassVar[list[datetime.datetime]] = [
-        # Tomorrow 9am
-        datetime.datetime(now.year, now.month, now.day + 1, 9, 0),
-        # Tomorrow 2pm
-        datetime.datetime(now.year, now.month, now.day + 1, 14, 0),
-        # Tomorrow 6pm
-        datetime.datetime(now.year, now.month, now.day + 1, 18, 0),
-        # 2 days later 1pm
-        datetime.datetime(now.year, now.month, now.day + 2, 13, 0),
-        # 12pm in 3 days,
-        datetime.datetime(now.year, now.month, now.day + 3, 12, 0),
-        # 5pm in 3 days,
-        datetime.datetime(now.year, now.month, now.day + 3, 17, 0),
-        # 7am in 4 days,
-        datetime.datetime(now.year, now.month, now.day + 4, 7, 0),
-        # 3pm in 4 days,
-        datetime.datetime(now.year, now.month, now.day + 4, 15, 0),
-        # 9am in 6 days,
-        datetime.datetime(now.year, now.month, now.day + 6, 9, 0),
-        # 1pm in 5 days,
-        datetime.datetime(now.year, now.month, now.day + 5, 13, 0),
-        # 6pm in 5 days,
-        datetime.datetime(now.year, now.month, now.day + 5, 18, 0),
-        # 4pm in 7 days,
-        datetime.datetime(now.year, now.month, now.day + 7, 16, 0),
-        # 9am in 7 days,
-        datetime.datetime(now.year, now.month, now.day + 7, 9, 0),
-        # 11am in 8 days,
-        datetime.datetime(now.year, now.month, now.day + 8, 11, 0),
-        # 8am in 9 days,
-        datetime.datetime(now.year, now.month, now.day + 9, 8, 0),
-        # 7pm in 9 days,
-        datetime.datetime(now.year, now.month, now.day + 9, 19, 0),
-        # 2am in 10 days,
-        datetime.datetime(now.year, now.month, now.day + 10, 2, 0),
+    now + datetime.timedelta(days=1, hours=9),
+    now + datetime.timedelta(days=1, hours=14),
+    now + datetime.timedelta(days=1, hours=18),
+    now + datetime.timedelta(days=2, hours=13),
+    now + datetime.timedelta(days=3, hours=12),
+    now + datetime.timedelta(days=3, hours=17),
+    now + datetime.timedelta(days=4, hours=7),
+    now + datetime.timedelta(days=4, hours=15),
+    now + datetime.timedelta(days=6, hours=9),
+    now + datetime.timedelta(days=5, hours=13),
+    now + datetime.timedelta(days=5, hours=18),
+    now + datetime.timedelta(days=7, hours=16),
+    now + datetime.timedelta(days=7, hours=9),
+    now + datetime.timedelta(days=8, hours=11),
+    now + datetime.timedelta(days=9, hours=8),
+    now + datetime.timedelta(days=9, hours=19),
+    now + datetime.timedelta(days=10, hours=2),
     ]
 
     # The process description will be injected in the prompt template.
@@ -227,7 +210,7 @@ To all other questions reply you don't know.
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),
