@@ -14,7 +14,7 @@ from .schemas import Process
 DEFAULT_PROMPT = """START CONTEXT
 {{goal}}
 
-Follow these rules when conversing with the Human:
+Follow these rules when conversing with the User:
 - You can only use the context and the knowledge you have collected from this conversation to answer the User.
 - You cannot use your pre-existing knowledge of the outside world.
 - When the User asks a question, answer with the context of this conversation only. If the answer is not in the context, say you don't know and repeat your question.
@@ -24,7 +24,7 @@ Follow these rules when conversing with the Human:
 
 
 {% if collected|length > 2 %}
-You already know the following information from the Human:
+You already know the following information from the User:
 
 ```json
 {{collected}}
@@ -44,14 +44,17 @@ END CONTEXT
 User: {{input}}
 
 {% if error_message %}
-Provide the following feedback to the Human: "{{error_message}}"
-(the Human is allowed to provide an answer to another question to ask)
+Provide the following feedback to the User: "{{error_message}}"
+(the User is allowed to provide an answer to another question to ask)
 {% elif not error_message and remaining|length > 2 %}
-Ask the `{{next_variable_to_collect}}` of the Human using the "question to ask" defined above.
-(the Human is allowed to provide an answer to another question to ask)
+
+If the latest User message is a question: answer it with the context of that conversation.
+Else, ask the `{{next_variable_to_collect}}` question the the User using the "question to ask" defined above.
 {% else %}
 You have successfully completed your task. Congratulations!
 {% endif %}
+
+###
 
 AI:"""
 

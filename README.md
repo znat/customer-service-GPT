@@ -56,7 +56,7 @@ poetry run python example_booking_bot.py
 
 ### 💇 Duplex clone
 
-This bot replicates the Google Duplex demo, in which an AI schedules a hair salon appointment. The AI is the customer assistant and the Human is the hair salon attendant.
+This bot replicates the Google Duplex demo, in which an AI schedules a hair salon appointment. The AI is the customer assistant and the User is the hair salon attendant.
 ```bash
 poetry run python example_booking_bot.py
 ```

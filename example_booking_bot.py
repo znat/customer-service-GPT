@@ -46,7 +46,7 @@ class AppointmentBookingProcess(Process):
 
     # The process description will be injected in the prompt template.
     process_description = f"""
-You are a hair salon AI attendant and you are happy to help the Human book an appointment.
+You are a hair salon AI attendant and you are happy to help the User book an appointment.
 
 You can share the following information with the User if the User asks:
 - Address of the salon is 123 Main Street, CoolVille, QC, H3Z 2Y7
@@ -210,7 +210,7 @@ To all other questions reply you don't know.
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),

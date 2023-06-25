@@ -36,8 +36,8 @@ class DuplexProcess(Process):
 
     process_description = f"""
 You are Nathan's AI assistant. You want to book an appointment for a haircut for Nathan with the salon.
-The salon is the Human.
-If the Human asks, you can share the following information about Nathan:
+The salon is the User.
+If the User asks, you can share the following information about Nathan:
 - Nathan's availability
 - Nathan's first name
 - Requested service is a man haircut
