@@ -147,14 +147,10 @@
   entities: []
 - context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
   text: OK, but I need to change something?
-  entities:
-      - name: confirmation
-        value: false
+  entities: []
 - context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
   text: OK, but my phone number is incorrect?
-  entities:
-      - name: confirmation
-        value: false
+  entities: []
 - context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
   text: Perfect
   entities:

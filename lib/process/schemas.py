@@ -8,7 +8,7 @@ class Process(BaseModel):
         str
     ] = "The goal of this form is to collect information from you"
     
-    _errors: Optional[Dict[str, str]] = {}
+    errors: Optional[Dict[str, str]] = {}
 
     def is_completed(self) -> bool:
         return True
@@ -18,8 +18,7 @@ class Process(BaseModel):
 
     @root_validator(pre=True)
     def all_fields_optional(cls, values):
-        values["_errors"] = {} if not values.get("_errors") else values["_errors"]
-        vals = {k: v for k, v in values.items() if k != "_errors"}
+        vals = {k: v for k, v in values.items() if k != "errors"}
         for field_name, _ in vals.items():
             field_type = cls.__annotations__[field_name]
             if not get_origin(field_type) is Union or not type(None) in get_args(

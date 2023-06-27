@@ -1,10 +1,11 @@
 import datetime
+import os
 import random
 from typing import ClassVar, Optional
 
 import yaml
 from langchain.chat_models import ChatOpenAI
-from pydantic import Field, root_validator, validator
+from pydantic import Field, ValidationError, root_validator, validator
 
 from lib.bot import gradio_bot
 from lib.conversation_memory import ConversationMemory
@@ -18,35 +19,37 @@ from lib.process.schemas import Process
 logger = setup_logger(__name__)
 # Some calendar availability the bot can use
 now = datetime.datetime.now()
+
+
 class AppointmentBookingProcess(Process):
     """
     This process is a simple appointment booking process."""
-    
+
     # Let's populate the salon calendar with some availability.
     # The bot will match users availability with the salon calendar.
     salon_available_slots: ClassVar[list[datetime.datetime]] = [
-    now + datetime.timedelta(days=1, hours=9),
-    now + datetime.timedelta(days=1, hours=14),
-    now + datetime.timedelta(days=1, hours=18),
-    now + datetime.timedelta(days=2, hours=13),
-    now + datetime.timedelta(days=3, hours=12),
-    now + datetime.timedelta(days=3, hours=17),
-    now + datetime.timedelta(days=4, hours=7),
-    now + datetime.timedelta(days=4, hours=15),
-    now + datetime.timedelta(days=6, hours=9),
-    now + datetime.timedelta(days=5, hours=13),
-    now + datetime.timedelta(days=5, hours=18),
-    now + datetime.timedelta(days=7, hours=16),
-    now + datetime.timedelta(days=7, hours=9),
-    now + datetime.timedelta(days=8, hours=11),
-    now + datetime.timedelta(days=9, hours=8),
-    now + datetime.timedelta(days=9, hours=19),
-    now + datetime.timedelta(days=10, hours=2),
+        now + datetime.timedelta(days=1, hours=9),
+        now + datetime.timedelta(days=1, hours=14),
+        now + datetime.timedelta(days=1, hours=18),
+        now + datetime.timedelta(days=2, hours=13),
+        now + datetime.timedelta(days=3, hours=12),
+        now + datetime.timedelta(days=3, hours=17),
+        now + datetime.timedelta(days=4, hours=7),
+        now + datetime.timedelta(days=4, hours=15),
+        now + datetime.timedelta(days=6, hours=9),
+        now + datetime.timedelta(days=5, hours=13),
+        now + datetime.timedelta(days=5, hours=18),
+        now + datetime.timedelta(days=7, hours=16),
+        now + datetime.timedelta(days=7, hours=9),
+        now + datetime.timedelta(days=8, hours=11),
+        now + datetime.timedelta(days=9, hours=8),
+        now + datetime.timedelta(days=9, hours=19),
+        now + datetime.timedelta(days=10, hours=2),
     ]
 
     # The process description will be injected in the prompt template.
     process_description = f"""
-You are a hair salon AI attendant and you are happy to help the Human book an appointment.
+You are a hair salon AI attendant and you are happy to help the User book an appointment.
 
 You can share the following information with the User if the User asks:
 - Address of the salon is 123 Main Street, CoolVille, QC, H3Z 2Y7
@@ -99,6 +102,8 @@ To all other questions reply you don't know.
         title="Matching slots in human frendly format",
     )
 
+    errors_count: Optional[int] = 0
+
     @classmethod
     def get_matching_slots(cls, availability: dict):
         start = datetime.datetime.fromisoformat(availability["start"])
@@ -121,14 +126,19 @@ To all other questions reply you don't know.
             human_friendly_dates = [
                 datetime.datetime.strftime(d, "%A %d at %H:%M") for d in slots
             ]
-            return ", ".join(human_friendly_dates[:-1]) + " or " + human_friendly_dates[-1]
+            return (
+                ", ".join(human_friendly_dates[:-1]) + " or " + human_friendly_dates[-1]
+            )
 
     def is_completed(self):
         return self.confirmation is True
 
-    @root_validator()
+    def is_failed(self):
+        return self.errors_count and self.errors_count >= 3
+
+    @root_validator(pre=True)
     def validate(cls, values: dict):
-        values["_errors"] = {}
+        values["errors"] = {}
         # Let's define a default value in case no availability is provided yet or
         # there is no matching slot between the Nathan's availability and the salon's availability
         values[
@@ -142,7 +152,7 @@ To all other questions reply you don't know.
                 logger.debug("No matching slot found")
                 del values["availability"]
                 del values["matching_slots_in_human_friendly_format"]
-                values["_errors"][
+                values["errors"][
                     "availability"
                 ] = "Unfortunately not, but we can offer {{matching_slots_in_human_friendly_format}}"
 
@@ -153,7 +163,9 @@ To all other questions reply you don't know.
                     values[
                         "matching_slots_in_human_friendly_format"
                     ] = cls.slots_in_human_friendly_format([matching_slots[0]])
-                    values["_errors"]["availability"] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
+                    values["errors"][
+                        "availability"
+                    ] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
                 else:
                     values["appointment"] = {
                         "start": matching_slots[0].isoformat(),
@@ -178,7 +190,20 @@ To all other questions reply you don't know.
                 values[
                     "matching_slots_in_human_friendly_format"
                 ] = cls.slots_in_human_friendly_format(matching_slots)
-                values["_errors"]["availability"] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
+                values["errors"][
+                    "availability"
+                ] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
+        if values.get("phone_number") is not None:
+            phone_number = values["phone_number"]
+            import re
+
+            pattern = re.compile(r"^\d{3}-\d{3}-\d{4}$")
+            if not pattern.match(phone_number):
+                del values["phone_number"]
+                values["errors"][
+                    "phone_number"
+                ] = "Can you please provide a valid phone number using the XXX-XXX-XXXX format?"
+                values["errors_count"] = values.get("errors_count", 0) + 1
 
         logger.debug(f"validated process values: {values}")
         return values
@@ -193,16 +218,6 @@ To all other questions reply you don't know.
         assert v is None or v[0].isalpha(), "Last name must start with a letter."
         return v.capitalize()
 
-    @validator("phone_number")
-    def validate_phone_number(cls, v):
-        import re
-
-        pattern = re.compile(r"^\d{3}-\d{3}-\d{4}$")
-        assert v is None or pattern.match(
-            v
-        ), f"Can you please provide a valid phone number using the XXX-XXX-XXXX format?"
-        return v
-
     @validator("confirmation", pre=True)
     def validate_confirmation(cls, v):
         assert v is True, "What would you like to change?"
@@ -210,7 +225,7 @@ To all other questions reply you don't know.
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),
@@ -232,9 +247,17 @@ and not if the user just says "yes" or confirms but asks follow-up questions.
     """,
     entity_examples=[
         EntityExample.parse_obj(e)
-        for e in yaml.safe_load(open("booking_bot_entity_examples.yaml"))
+        for e in yaml.safe_load(
+            open(
+                os.path.join(
+                    os.path.abspath(os.path.dirname(__file__)),
+                    "booking_bot_entity_examples.yaml",
+                )
+            )
+        )
     ],
 )
+
 
 gradio_bot(
     chain=process_chain,
