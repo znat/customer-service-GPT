@@ -47,7 +47,7 @@ OPENAI_API_KEY=<key>
 An AI medical assistant helps users book appointments at the clinic by trying to find matching availability, answering questions, and collecting necessary information to confirm the appointment
 
 ```bash
-poetry run python example_booking_bot.py
+poetry run python -m examples.appointment_booking.example_booking_bot
 ```
 
 <div align="center">
@@ -58,7 +58,7 @@ poetry run python example_booking_bot.py
 
 This bot replicates the Google Duplex demo, in which an AI schedules a hair salon appointment. The AI is the customer assistant and the User is the hair salon attendant.
 ```bash
-poetry run python example_booking_bot.py
+poetry run python -m examples.appointment_booking.example_duplex_bot
 ```
 
 

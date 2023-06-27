@@ -59,31 +59,31 @@ To all other questions reply you don't know.
 
 """
 
-    # availability: Optional[dict | str] = Field(
-    #     title="Availability for doctor appointment",
-    #     question="Would you be available {{matching_slots_in_human_friendly_format}}",
-    #     description=f"Providing availability helps finding an available slot in the salon's calendar",
-    # )
+    availability: Optional[dict | str] = Field(
+        title="Availability for doctor appointment",
+        question="Would you be available {{matching_slots_in_human_friendly_format}}",
+        description=f"Providing availability helps finding an available slot in the salon's calendar",
+    )
 
-    # appointment_time: Optional[str] = Field(
-    #     title="Appointment in human frendly format",
-    # )
-    # # This variable will be set in the validation step, but will not be asked to the user, hence no `question``.
-    # appointment: Optional[dict[str, str]] = Field(
-    #     title="Appointment slot ISO datetimes",
-    # )
+    appointment_time: Optional[str] = Field(
+        title="Appointment in human frendly format",
+    )
+    # This variable will be set in the validation step, but will not be asked to the user, hence no `question``.
+    appointment: Optional[dict[str, str]] = Field(
+        title="Appointment slot ISO datetimes",
+    )
 
-    # first_name: Optional[str] = Field(
-    #     name="First name",
-    #     description="First name of the user, required to identify a patient",
-    #     question="What is your first name?",
-    # )
+    first_name: Optional[str] = Field(
+        name="First name",
+        description="First name of the user, required to identify a patient",
+        question="What is your first name?",
+    )
 
-    # last_name: Optional[str] = Field(
-    #     name="Last name",
-    #     description="Last name of the user, required to identify a patient",
-    #     question="What is your last name?",
-    # )
+    last_name: Optional[str] = Field(
+        name="Last name",
+        description="Last name of the user, required to identify a patient",
+        question="What is your last name?",
+    )
 
     phone_number: Optional[str] = Field(
         name="Phone number",
@@ -208,15 +208,15 @@ To all other questions reply you don't know.
         logger.debug(f"validated process values: {values}")
         return values
 
-    # @validator("first_name")
-    # def validate_first_name(cls, v):
-    #     assert v is None or v[0].isalpha(), "First name must start with a letter."
-    #     return v.capitalize()
+    @validator("first_name")
+    def validate_first_name(cls, v):
+        assert v is None or v[0].isalpha(), "First name must start with a letter."
+        return v.capitalize()
 
-    # @validator("last_name")
-    # def validate_last_name(cls, v):
-    #     assert v is None or v[0].isalpha(), "Last name must start with a letter."
-    #     return v.capitalize()
+    @validator("last_name")
+    def validate_last_name(cls, v):
+        assert v is None or v[0].isalpha(), "Last name must start with a letter."
+        return v.capitalize()
 
     @validator("confirmation", pre=True)
     def validate_confirmation(cls, v):

@@ -1,4 +1,5 @@
 import datetime
+import os
 import random
 from typing import ClassVar, Optional
 
@@ -9,7 +10,8 @@ from pydantic import Field, root_validator, validator
 from lib.bot import console_bot, gradio_bot
 from lib.conversation_memory import ConversationMemory
 from lib.logger_config import setup_logger
-from lib.ner.entities.basic_entities import BooleanEntity, Entity, EntityExample
+from lib.ner.entities.basic_entities import (BooleanEntity, Entity,
+                                             EntityExample)
 from lib.ner.entities.datetime_entity import DateTimeEntity
 from lib.process.process_chain import ProcessChain
 from lib.process.schemas import Process
@@ -79,7 +81,7 @@ If the salon asks anything else about Nathan, say it's not relevant.
 
     @root_validator()
     def validate(cls, values: dict):
-        values["_errors"] = {}
+        values["errors"] = {}
         # Let's define a default value in case no availability is provided yet or
         # there is no matching slot between the Nathan's availability and the salon's availability
         values[
@@ -93,7 +95,7 @@ If the salon asks anything else about Nathan, say it's not relevant.
                 logger.debug("No matching slot found")
                 del values["availability"]
                 del values["matching_slots_in_human_friendly_format"]
-                values["_errors"][
+                values["errors"][
                     "availability"
                 ] = "Unfortunately not, but we can offer {{matching_slots_in_human_friendly_format}}"
 
@@ -104,7 +106,7 @@ If the salon asks anything else about Nathan, say it's not relevant.
                     values[
                         "matching_slots_in_human_friendly_format"
                     ] = cls.slots_in_human_friendly_format([matching_slots[0]])
-                    values["_errors"][
+                    values["errors"][
                         "availability"
                     ] = "We can propose you a slot on {{matching_slots_in_human_friendly_format}}. Would that work?"
                 else:
@@ -131,7 +133,7 @@ If the salon asks anything else about Nathan, say it's not relevant.
                 values[
                     "matching_slots_in_human_friendly_format"
                 ] = cls.slots_in_human_friendly_format(matching_slots)
-                values["_errors"][
+                values["errors"][
                     "availability"
                 ] = "We have several slot available: {{matching_slots_in_human_friendly_format}}. Would that work?"
 
@@ -181,7 +183,14 @@ process_chain = ProcessChain(
     },
     entity_examples=[
         EntityExample.parse_obj(e)
-        for e in yaml.safe_load(open("duplex_bot_entity_examples.yaml"))
+        for e in yaml.safe_load(
+            open(
+                os.path.join(
+                    os.path.abspath(os.path.dirname(__file__)),
+                    "duplex_bot_entity_examples.yaml",
+                )
+            )
+        )
     ],
 )
 
