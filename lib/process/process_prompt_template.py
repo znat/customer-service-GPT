@@ -78,7 +78,7 @@ class ProcessPromptTemplate(PromptTemplate):
             remaining_as_list,
         ) = self.get_remaining_variables_to_collect(kwargs["variables"])
 
-        errors: dict | None = kwargs["variables"].get("_errors")
+        errors: dict | None = kwargs["variables"].get("errors")
                 
         error_message = (
             errors.get(list(errors.keys())[0]) if errors and len(errors) else None
@@ -115,7 +115,7 @@ class ProcessPromptTemplate(PromptTemplate):
     def get_collected_variables(self, variables: dict[str, Any]) -> dict[str, Any]:
         # Filter out None values and errors
         return {
-            k: v for k, v in variables.items() if v is not None and k is not "_errors"
+            k: v for k, v in variables.items() if v is not None and k != "errors"
         }
 
     def get_collected_variable_names(self, variables: dict[str, Any]) -> list[str]:

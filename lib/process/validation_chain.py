@@ -73,19 +73,20 @@ class FormValidationChain(Chain):
             )
             data = self.process.parse_obj(variables)
             self.save_variables(data.dict())
+            print("ERRORS", data)
             logger.debug(
                 f"Process model post-validation: {data.dict()}",
             )
 
             if data.is_completed():
-                result = Result(status=Status.completed, result=data, errors=None)
+                result = Result(status=Status.completed, result=data, errors=data.errors)
                 logger.debug(f"Process result: {result.dict()}")
             if data.is_failed():
                 result = Result(status=Status.failed, result=data, errors=None)
                 logger.debug(f"Process result: {result.dict()}")
-            self.memory.kv_store.set("_errors", {})
+            self.memory.kv_store.set("errors", {})
             variables = self.memory.kv_store.load_memory_variables()["variables"]
-            variables["_errors"] = data._errors
+            variables["errors"] = data.errors
         except ValidationError as e:
             logger.debug(
                 f"Validation error: {e}",
@@ -99,8 +100,7 @@ class FormValidationChain(Chain):
                 if k not in errors.keys()
             }
             logger.debug("Variables after validation errors:", variables)
-            variables["_errors"] = errors
-        logger.debug(f"variables after validation: {variables}")
+            variables["errors"] = errors
         return {"variables": variables, "result": result.dict() if result else None}
 
     @staticmethod
