@@ -2,7 +2,12 @@
 
 A basic toolkit to experiment with LLM-powered process-driven chatbots. Experimental, not meant to be used in a prod setup
 
-Process-driven chatbots assist users in completing tasks by guiding them through a sequence of steps, such as opening a bank account or scheduling an appointment. They need to provide guardrails, state management, and user input validation.
+Process-driven chatbots assist users in completing tasks by guiding them through a sequence of steps, such as opening a bank account or scheduling an appointment.
+
+This expermiments with:
+- Named entity recognition
+- User input validation
+- Dialogue state management
 
 It seems to work well with `gpt-4`, and sometimes go off tracks with `gpt-3-5`
 
@@ -51,7 +56,7 @@ poetry run python -m examples.appointment_booking.example_booking_bot
 ```
 
 <div align="center">
-<img align="center" src="./appointment_booking_demo.gif" alt="demonstration" width=500>
+<img align="center" src="./examples/appointment_booking/appointment_booking_demo.gif" alt="demonstration" width=500>
 </div>
 
 ### 💇 Duplex clone
@@ -63,7 +68,7 @@ poetry run python -m examples.appointment_booking.example_duplex_bot
 
 
 <div align="center">
-<img align="center" src="./google_duplex_demo.gif" alt="demonstration" width=500>
+<img align="center" src="./examples/appointment_booking/google_duplex_demo.gif" alt="demonstration" width=500>
 </div>
 
 ## ⚙️ Quick start
