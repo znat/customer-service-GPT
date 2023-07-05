@@ -11,9 +11,12 @@ logger = setup_logger(__name__)
 from ..utils import convert_list_to_string
 from .schemas import Process
 
-DEFAULT_PROMPT = """START CONTEXT
+DEFAULT_PROMPT = """# CONTEXT
+
+## Goal
 {{goal}}
 
+## Rules
 Follow these rules when conversing with the User:
 - You can only use the context and the knowledge you have collected from this conversation to answer the User.
 - You cannot use your pre-existing knowledge of the outside world.
@@ -22,34 +25,42 @@ Follow these rules when conversing with the User:
 - You must predict one and only one AI message.
 - introduce yourself if it's your first message
 
-
+## Knowledge
 {% if collected|length > 2 %}
-You already know the following information from the User:
+### What you know from the User so far
 
 ```json
 {{collected}}
 ```
 {% endif %}
 {% if remaining|length > 2 %}
-You don't know {{remaining_as_string}} yet and you have to collect then in the right order:
+### What you still need to know from the User
+
+You still need to collect {{remaining_as_string}} from the user and in the right order:
 
 {{remaining}}
 
 {% endif %}
-END CONTEXT
 
 
-
+# CONVERSATION HISTORY
 {{history}}
 User: {{input}}
 
-{% if error_message %}
+# AI RESPONSE
+{% if is_process_starting %}
+- Explain your goal to the User
+- Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}"
+{% elif error_message %}
 Provide the following feedback to the User: "{{error_message}}"
 (the User is allowed to provide an answer to another question to ask)
 {% elif not error_message and remaining|length > 2 %}
+If "{{input}}" is a question:
+    - Try answering it with the context of that conversation. Or say you don't know.
+If "{{input}}" answers your previous AI question:
+    - Confirm using the variable in the knowledge above
+    - Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}"
 
-If the latest User message is a question: answer it with the context of that conversation.
-Else, ask the `{{next_variable_to_collect}}` question the the User using the "question to ask" defined above.
 {% else %}
 You have successfully completed your task. Congratulations!
 {% endif %}
@@ -99,6 +110,7 @@ class ProcessPromptTemplate(PromptTemplate):
 
         return super().format(
             goal=self.process.process_description,
+            is_process_starting=self.is_first_message(kwargs["history"]),
             remaining=remaining_as_list,
             collected=json.dumps(collected, indent=2),
             error_message=error_message,
@@ -111,6 +123,8 @@ class ProcessPromptTemplate(PromptTemplate):
             errors=json.dumps(errors, indent=2) if errors is not None else None,
             **kwargs,
         )
+    def is_first_message(self, history: str) -> bool:
+        return "AI:" not in history
 
     def get_collected_variables(self, variables: dict[str, Any]) -> dict[str, Any]:
         # Filter out None values and errors
@@ -148,10 +162,9 @@ class ProcessPromptTemplate(PromptTemplate):
 
     def convert_dict_to_ordered_list(self, data_dict: dict):
         result = []
+        print(data_dict.items())
         for index, (key, value) in enumerate(data_dict.items(), start=1):
-            entry = f"{index}. {key}\n"
-            entry += f"    question to ask: {value['question']}\n"
-            entry += f"    description: {value['description']}\n"
+            entry = f"{index}. {key} ({value['variable_name']}): {value['description']}"
             result.append(entry)
 
         return "\n".join(result)

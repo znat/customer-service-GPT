@@ -1,0 +1,479 @@
+- context: 'What is your first name?'
+  text: "I'm peter jackson"
+  entities:
+      - name: first_name
+        value: Peter
+      - name: last_name
+        value: Jackson
+- context: 'What is your phone number?'
+  text: "I'm James Dean"
+  entities:
+      - name: first_name
+        value: James
+      - name: last_name
+        value: Dean
+- context: 'What is your first name?'
+  text: 'First one'
+  entities: []
+- text: 'My first name is ana'
+  entities:
+      - name: first_name
+        value: Ana
+- text: "I'm Nathan"
+  entities:
+      - name: first_name
+        value: Nathan
+- context: 'What is your phone number?'
+  text: '4385569102'
+  entities:
+      - name: phone_number
+        value: '438-556-9102'
+- context: 'What is your phone number?'
+  text: '0698407811'
+  entities:
+      - name: phone_number
+        value: '0698407811'
+- text: 'my number is (438) 556 9102'
+  entities:
+      - name: phone_number
+        value: '438-556-9102'
+- text: "My name is Jo Neville and I'm a plumber"
+  entities:
+      - name: first_name
+        value: Jo
+      - name: last_name
+        value: Neville
+- context: 'Friday 16 at 18:00, Saturday 24 at 08:00 or Thursday 22 at 09:00'
+  text: 'Friday'
+  entities:
+      - name: availability
+        value: 'Friday 16 at 18:00'
+- context: 'What is your last name'
+  text: 'Do you have anything next Tuesday?'
+  entities:
+      - name: availability
+        value: 'next Tuesday'
+
+- context: 'Wednesday 15 at 19:00, Sunday 25 at 08:00 or Thursday 22 at 09:00'
+  text: I'm Jamie but on second thought I prefer Sunday
+  entities:
+      - name: availability
+        value: 'Sunday 25 at 08:00'
+
+- context: 'Friday 16 at 18:00, Saturday 24 at 08:00 or Thursday 22 at 09:00'
+  text: 'the 24th'
+  entities:
+      - name: availability
+        value: ' Saturday 24 at 08:00'
+- text: "let's go next Thursday at 4pm"
+  entities:
+      - name: availability
+        value: 'next Thursday at 4pm'
+- text: 'What do you have next week?'
+  entities:
+      - name: availability
+        value: 'next week'
+- context: 'Can you confirm the appointment?'
+  text: 'Yes'
+  entities:
+      - name: confirmation
+        value: true
+- context: 'Anything else before we confirm the appointment?'
+  text: No we're good
+  entities:
+      - name: confirmation
+        value: true
+- context: 'When are you available'
+  text: 'Yes'
+  entities: []
+- context: 'I can propose Wednesday 14 at 09:00, Friday 16 at 11:00 or Sunday 18 at 11:00. Is there an option that suits you? What is your availability like next week?'
+  text: 'the second option is great'
+  entities:
+      - name: availability
+        value: 'Friday 16 at 11:00'
+- context: 'I can propose Wednesday 14 at 09:00, Friday 16 at 11:00 or Sunday 18 at 11:00. Is there an option that suits you? What is your availability like next week?'
+  text: '18th'
+  entities:
+      - name: availability
+        value: 'Sunday 18 at 11:00'
+
+- context: 'Would you be available Friday 09 at 14:00 or Friday 09 at 18:00?'
+  text: 'the first one'
+  entities:
+      - name: availability
+        value: 'Friday 09 at 14:00'
+- context: 'Would you be available Friday 09 at 14:00 or Friday 09 at 18:00?'
+  text: 'Any works'
+  entities:
+      - name: availability
+        value: 'Friday 09 at 14:00'
+- text: "Sorry, I'm watching the kids. Do you have something tomorrow?"
+  entities:
+      - name: availability
+        value: 'tomorrow'
+- context: 'Great! We have availability on Sunday 11 at 14:00.'
+  text: 'I prefer Monday'
+  entities:
+      - name: availability
+        value: 'Monday'
+- context: 'I can propose Tuesday 13 at 17:00. Is that time slot suitable for you?'
+  text: 'yes'
+  entities:
+      - name: availability
+        value: 'Tuesday 13 at 17:00'
+- context: 'Can you confirm the appointment?'
+  text: 'Yes but what is their first name?'
+  entities: []
+- context: 'Sure, what information do you need to confirm?'
+  text: 'Their phone number?'
+  entities: []
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: we're good
+  entities:
+      - name: confirmation
+        value: true
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Yeah but what was your address again?
+  entities: []
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Yes except that my name is Patrick Stewaert
+  entities:
+      - name: last_name
+        value: Stewaert
+      - name: first_name
+        value: Patrick
+- context: Let's review everyting. You are Patrick Stewart, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: What is your phone number again?
+  entities: []
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: OK, but I need to change something?
+  entities: []
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: OK, but my phone number is incorrect?
+  entities: []
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Perfect
+  entities:
+      - name: confirmation
+        value: true
+- context: Let's review everyting. You are James Deam, your phone number is 998-987-9875 and we have booked an appointment on Monday 18 at 12:00. Is everything correct?
+  text: Absolutely
+  entities:
+      - name: confirmation
+        value: true
+- context: We can propose you Monday 24 at 9:00. Would that work?
+  text: 'Yes'
+  entities:
+      - name: availability
+        value: 'Monday 24 at 9:00'
+- context: We can propose you Tuesday 25 at 14:00. Would that work?
+  text: 'That works'
+  entities:
+      - name: availability
+        value: 'Tuesday 25 at 14:00'
+- context: Would you be available Monday 03 at 06:33, Friday 07 at 01:33 or Wednesday 05 at 09:33?
+  text: sure, wait a second I'm looking at the calendar
+  entities: []
+- text: "I'm Alice Johnson"
+  entities:
+      - name: first_name
+        value: Alice
+      - name: last_name
+        value: Johnson
+- context: 'Could you tell me your name?'
+  text: "I'm Robert Smith"
+  entities:
+      - name: first_name
+        value: Robert
+      - name: last_name
+        value: Smith
+- context: 'What is your first name?'
+  text: 'Not sure yet'
+  entities: []
+- text: 'My name is Emma'
+  entities:
+      - name: first_name
+        value: Emma
+- text: "I'm Jack"
+  entities:
+      - name: first_name
+        value: Jack
+- context: 'What is your phone number?'
+  text: '7545097142'
+  entities:
+      - name: phone_number
+        value: '754-509-7142'
+- context: 'What is your phone number?'
+  text: '0909090909'
+  entities:
+      - name: phone_number
+        value: '0909090909'
+- text: 'Here is my number (714) 539 5221'
+  entities:
+      - name: phone_number
+        value: '714-539-5221'
+- text: "My name is Maria Lopez and I'm a teacher"
+  entities:
+      - name: first_name
+        value: Maria
+      - name: last_name
+        value: Lopez
+- context: 'Tuesday 17 at 16:00, Sunday 05 at 17:00 or Wednesday 24 at 10:00'
+  text: 'Tuesday'
+  entities:
+      - name: availability
+        value: 'Tuesday 17 at 16:00'
+- context: 'What is your last name'
+  text: 'How about the following Wednesday?'
+  entities:
+      - name: availability
+        value: 'following Wednesday'
+- context: 'Monday 10 at 19:00, Sunday 26 at 15:00 or Tuesday 24 at 11:00'
+  text: I'm Chloe and I'll take the last option
+  entities:
+      - name: availability
+        value: 'Tuesday 24 at 11:00'
+- context: 'Friday 15 at 18:00, Saturday 23 at 08:00 or Thursday 28 at 09:00'
+  text: 'the 15th'
+  entities:
+      - name: availability
+        value: 'Friday 15 at 18:00'
+- text: "let's meet next Wednesday at 1pm"
+  entities:
+      - name: availability
+        value: 'next Wednesday at 1pm'
+- text: 'What openings do you have next month?'
+  entities:
+      - name: availability
+        value: 'next month'
+- context: 'Please confirm the appointment?'
+  text: 'Confirmed'
+  entities:
+      - name: confirmation
+        value: true
+- context: 'Any other requests before we secure the appointment?'
+  text: All set here
+  entities:
+      - name: confirmation
+        value: true
+- context: 'When can you come in?'
+  text: 'Sounds good'
+  entities: []
+- context: 'I have availability Tuesday 22 at 11:00, Thursday 24 at 10:00 or Saturday 26 at 14:00. Does any of these work for you? What does your schedule look like next week?'
+  text: 'Tuesday works'
+  entities:
+      - name: availability
+        value: 'Tuesday 22 at 11:00'
+- context: 'I have availability Tuesday 22 at 11:00, Thursday 24 at 10:00 or Saturday 26 at 14:00. Does any of these work for you? What does your schedule look like next week?'
+  text: '26th'
+  entities:
+      - name: availability
+        value: 'Saturday 26 at 14:00'
+- context: 'Can you come in Monday 13 at 16:00 or Monday 13 at 20:00?'
+  text: 'first option please'
+  entities:
+      - name: availability
+        value: 'Monday 13 at 16:00'
+- context: 'Can you come in Monday 13 at 16:00 or Monday 13 at 20:00?'
+  text: 'Either one is fine'
+  entities:
+      - name: availability
+        value: 'Monday 13 at 16:00'
+- text: "Sorry, I'm busy. What times are available the day after tomorrow?"
+  entities:
+      - name: availability
+        value: 'day after tomorrow'
+- context: 'Awesome! We have availability on Sunday 11 at 16:00.'
+  text: 'Can we do Tuesday instead?'
+  entities:
+      - name: availability
+        value: 'Tuesday'
+- context: 'How about Wednesday 13 at 17:30? Does it work for you?'
+  text: 'yes'
+  entities:
+      - name: availability
+        value: 'Wednesday 13 at 17:30'
+- context: 'Please confirm the appointment?'
+  text: 'Yes but can they also confirm?'
+  entities: []
+- context: 'What else do you need to confirm?'
+  text: 'Could I have their email please?'
+  entities: []
+- context: 'Just a recap: you are George Miller, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: all good
+  entities:
+      - name: confirmation
+        value: true
+- context: 'Just a recap: you are George Miller, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: Yes, but could you remind me of the appointment location?
+  entities: []
+- context: 'Just a recap: you are George Miller, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: Yes but my name is spelled George Millar
+  entities:
+      - name: last_name
+        value: Millar
+      - name: first_name
+        value: George
+- context: 'Just a recap: you are George Miller, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: What was their phone number again?
+  entities: []
+- context: 'Just a recap: you are Humphrey Bogart, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: OK, but can I modify something?
+  entities: []
+- context: 'Just a recap: you are Humphrey Bogart, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: OK, but there's an error with my phone number?
+  entities: []
+- context: 'Just a recap: you are Humphrey Bogart, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: Excellent
+  entities:
+      - name: confirmation
+        value: true
+- context: 'Just a recap: you are Humphrey Bogart, your phone number is 657-931-3475 and we have booked an appointment on Tuesday 21 at 15:00. Is this correct?'
+  text: Affirmative
+  entities:
+      - name: confirmation
+        value: true
+- context: Our next meeting is on Friday 07 at 8:00. Does that sound good to you?
+  text: 'Perfect'
+  entities:
+      - name: availability
+        value: 'Friday 07 at 8:00'
+- context: Our next meeting is on Saturday 08 at 14:00. Does that sound good to you?
+  text: 'That sounds suitable'
+  entities:
+      - name: availability
+        value: 'Saturday 08 at 14:00'
+- context: Would you be available Monday 17 at 08:00, Friday 21 at 02:00 or Wednesday 26 at 10:00?
+  text: I will need to confirm, let me check my schedule
+  entities: []
+- context: 'Can you provide your name?'
+  text: 'My name is Steve Jobs'
+  entities:
+      - name: first_name
+        value: Steve
+      - name: last_name
+        value: Jobs
+- context: 'Could you let me know your name?'
+  text: 'You can call me Bill Gates'
+  entities:
+      - name: first_name
+        value: Bill
+      - name: last_name
+        value: Gates
+- context: 'May I have your first name, please?'
+  text: 'Still deciding'
+  entities: []
+- text: 'Everyone calls me Michael Jordan'
+  entities:
+      - name: first_name
+        value: Michael
+- text: "I'm Oprah Winfrey"
+  entities:
+      - name: first_name
+        value: Oprah
+- context: 'Could you provide your phone number?'
+  text: '2127894561'
+  entities:
+      - name: phone_number
+        value: '212-789-4561'
+- context: 'Can you tell me your phone number?'
+  text: '1234567890'
+  entities:
+      - name: phone_number
+        value: '1234567890'
+- text: Here's my contact (212) 789 4561
+  entities:
+      - name: phone_number
+        value: '212-789-4561'
+- text: "You may refer to me as Will Smith and I'm an actor"
+  entities:
+      - name: first_name
+        value: Will
+      - name: last_name
+        value: Smith
+- context: 'Could you come in Monday 15 at 16:00, Friday 19 at 17:00 or Wednesday 24 at 10:00?'
+  text: I'll take the first slot
+  entities:
+      - name: availability
+        value: 'Monday 15 at 16:00'
+- context: 'What is your surname?'
+  text: 'Are there any openings next Friday?'
+  entities:
+      - name: availability
+        value: 'next Friday'
+- context: 'We can propose Tuesday 05 at 20:00, Thursday 07 at 15:00 or Saturday 09 at 14:00. Which one suits you best?'
+  text: I'm John but I'd like to come in on Thursday
+  entities:
+      - name: availability
+        value: 'Thursday 07 at 15:00'
+- context: 'We can set it to Friday 23 at 18:00, Saturday 31 at 08:00 or Tuesday 27 at 09:00. What is your preference?'
+  text: 'the 31st'
+  entities:
+      - name: availability
+        value: 'Saturday 31 at 08:00'
+- text: "Why don't we do next Monday at 3pm?"
+  entities:
+      - name: availability
+        value: 'next Monday at 3pm'
+- text: 'Any spots for the upcoming weekend?'
+  entities:
+      - name: availability
+        value: 'upcoming weekend'
+- context: 'Could you confirm the appointment, please?'
+  text: 'Confirmed, see you then.'
+  entities:
+      - name: confirmation
+        value: true
+- context: 'Anything else you need before we finalize the appointment?'
+  text: 'No, thank you. Sounds good!'
+  entities:
+      - name: confirmation
+        value: true
+- context: 'When would it suit you to meet?'
+  text: 'Sure'
+  entities: []
+- context: 'I can schedule it for Monday 12 at 11:00, Wednesday 14 at 10:00 or Friday 16 at 14:00. Which one works for you? Can you let me know your availability for the following week?'
+  text: 'The first option seems better'
+  entities:
+      - name: availability
+        value: 'Monday 12 at 11:00'
+- context: 'I can schedule it for Monday 12 at 11:00, Wednesday 14 at 10:00 or Friday 16 at 14:00. Which one works for you? Can you let me know your availability for the following week?'
+  text: '16th would do'
+  entities:
+      - name: availability
+        value: 'Friday 16 at 14:00'
+- context: 'What is your name?'
+  text: Sorry but I'm only available next week
+  entities:
+      - name: availability
+        value: 'next week'
+- context: Nice to meet you, James Bond. Could you please provide me with your phone number?
+  text: Wait, can we do it later next week, say Friday?
+  entities:
+      - name: availability
+        value: 'Friday 16 next week'
+- context: 'We have several slots available: Friday 07 at 04:22, Saturday 08 at 11:22, Saturday 08 at 04:22, Sunday 09 at 06:22, Monday 10 at 03:22, Monday 10 at 14:22 or Monday 10 at 21:22. Would any of these work for you?'
+  text: Monday pm works
+  entities:
+      - name: availability
+        value: 'Monday 10 at 14:22'
+- context: 'We have several slots available: Friday 07 at 04:22, Saturday 08 at 11:22, Saturday 08 at 04:22, Sunday 09 at 06:22, Monday 10 at 03:22, Monday 10 at 14:22 or Monday 10 at 21:22. Would any of these work for you?'
+  text: Monday pm works
+  entities:
+      - name: availability
+        value: 'Monday 10 at 14:22'
+- context: 'We have several slot available: Thursday 06 at 12:07 or Thursday 06 at 17:07. Would that work?'
+  text: in the afternoom
+  entities:
+      - name: availability
+        value: 'Thursday 06 at 17:07'
+- context: 'We can propose you a slot on Friday 07 at 09:45. Would that work?'
+  text: 'yes'
+  entities:
+      - name: availability
+        value: 'Friday 07 at 09:45'
+- context: 'Would you be available Friday 14 at 04:45, Wednesday 12 at 05:45 or Thursday 06 at 05:45?'
+  text: 'I am Wednesday'
+  entities:
+      - name: availability
+        value: 'Wednesday 12 at 05:45'

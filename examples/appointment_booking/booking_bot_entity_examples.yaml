@@ -172,5 +172,11 @@
       - name: availability
         value: 'Tuesday 25 at 14:00'
 - context: Would you be available Monday 03 at 06:33, Friday 07 at 01:33 or Wednesday 05 at 09:33?
-  text: 'sure, wait a second I'm looking at the calendar'
+  text: sure, wait a second I'm looking at the calendar
   entities: []
+- context: 'We can propose you a slot on Friday 07 at 09:45. Would that work?'
+  text: 'yes'
+  entities:
+      - name: availability
+        value: 'Friday 07 at 09:45'
+        

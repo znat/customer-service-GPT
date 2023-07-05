@@ -79,16 +79,7 @@ class NERPromptTemplate(StringPromptTemplate):
 
     @staticmethod
     def get_entity_extraction_context(text: str) -> str:
-        # Split the text into lines
-        lines = text.split("\n")
-
-        # Find the last line that starts with "AI:"
-        last_ai_response = None
-        for line in lines:
-            if line.startswith("AI:"):
-                last_ai_response = line
-
-        # Extract the response text after "AI:"
-        response = last_ai_response.split("AI:")[1].strip() if last_ai_response else ""
-
+        response_parts = text.split('AI: ')
+        last_ai_response = response_parts[-1].strip()
+        response = last_ai_response if last_ai_response else ""
         return response

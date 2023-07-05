@@ -10,8 +10,7 @@ from pydantic import Field, ValidationError, root_validator, validator
 from lib.bot import gradio_bot
 from lib.conversation_memory import ConversationMemory
 from lib.logger_config import setup_logger
-from lib.ner.entities.basic_entities import (BooleanEntity, Entity,
-                                             EntityExample)
+from lib.ner.entities.basic_entities import BooleanEntity, Entity, EntityExample
 from lib.ner.entities.datetime_entity import DateTimeEntity
 from lib.process.process_chain import ProcessChain
 from lib.process.schemas import Process
@@ -74,26 +73,26 @@ To all other questions reply you don't know.
     )
 
     first_name: Optional[str] = Field(
-        name="First name",
+        title="First name",
         description="First name of the user, required to identify a patient",
         question="What is your first name?",
     )
 
     last_name: Optional[str] = Field(
-        name="Last name",
+        title="Last name",
         description="Last name of the user, required to identify a patient",
         question="What is your last name?",
     )
 
     phone_number: Optional[str] = Field(
-        name="Phone number",
+        title="Phone number",
         description="Phone number of the user, required to contact a patient in case of unexpected events, such as delays or cancellations",
         question="What is your phone number?",
     )
 
     confirmation: Optional[bool] = Field(
         title="Confirmation",
-        question="Great. Let's review everyting. You are {{first_name}} {{last_name}}, your phone number is {{phone_number}} and we have booked an appointment on {human_friendly_appointment_time}. Is everything correct?",
+        question="Great. Let's review everyting. You are {{first_name}} {{last_name}}, your phone number is {{phone_number}} and we have booked an appointment on {{human_friendly_appointment_time}}. Is everything correct?",
         name="Confirmation",
         description="We need a confirmation to make sure we have the right information before we book.",
     )
@@ -131,7 +130,7 @@ To all other questions reply you don't know.
             )
 
     def is_completed(self):
-        return self.confirmation is True
+        return super().is_completed() and self.confirmation is True
 
     def is_failed(self):
         return self.errors_count and self.errors_count >= 3
@@ -151,10 +150,14 @@ To all other questions reply you don't know.
             if len(matching_slots) == 0:
                 logger.debug("No matching slot found")
                 del values["availability"]
-                del values["matching_slots_in_human_friendly_format"]
+                values[
+                    "matching_slots_in_human_friendly_format"
+                ] = cls.slots_in_human_friendly_format(
+                    random.sample(cls.salon_available_slots, 3)
+                )
                 values["errors"][
                     "availability"
-                ] = "Unfortunately not, but we can offer {{matching_slots_in_human_friendly_format}}"
+                ] = "No, unfortunately. but we can offer {{matching_slots_in_human_friendly_format}}"
 
             elif len(matching_slots) == 1:
                 logger.debug(f"Found a slot at {matching_slots[0]}")
@@ -224,8 +227,11 @@ To all other questions reply you don't know.
         return v
 
 
-ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=100, model="gpt-4")
+ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-3.5-turbo")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-4")
+
+from langchain.llms import Cohere
+chat_cohere = Cohere(temperature=0, client=None)
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),

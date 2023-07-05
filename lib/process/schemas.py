@@ -11,7 +11,7 @@ class Process(BaseModel):
     errors: Optional[Dict[str, str]] = {}
 
     def is_completed(self) -> bool:
-        return True
+        return all(v is not None for v in self.dict().values())
 
     def is_failed(self) -> bool:
         return False
