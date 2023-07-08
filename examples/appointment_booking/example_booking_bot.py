@@ -146,7 +146,10 @@ To all other questions reply you don't know.
             random.sample(cls.salon_available_slots, 3)
         )
         if values.get("availability") is not None:
+            # The grain of a datetime can be just one minute. We want to make sure we have at least 15 minutes
+            values["availability"]["grain"] = max(values["availability"]["grain"], 15 * 60)
             matching_slots = cls.get_matching_slots(values["availability"])
+            
             if len(matching_slots) == 0:
                 logger.debug("No matching slot found")
                 del values["availability"]
@@ -228,7 +231,7 @@ To all other questions reply you don't know.
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-4")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-3.5-turbo")
 
 from langchain.llms import Cohere
 chat_cohere = Cohere(temperature=0, client=None)

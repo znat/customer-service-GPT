@@ -179,4 +179,8 @@
   entities:
       - name: availability
         value: 'Friday 07 at 09:45'
-        
+- context: Nice to meet you, Nathan! What is your last name?
+  text: Sorry but I can't make it on Wednesday. What are your other availability next week?
+  entities: 
+    - name: availability
+      value: 'next week'

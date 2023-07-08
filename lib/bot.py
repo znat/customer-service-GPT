@@ -1,5 +1,5 @@
 import json
-
+from langchain.chains.base import Chain
 from rich.console import Console
 from rich.prompt import Prompt
 
@@ -25,22 +25,22 @@ def console_bot(chain: ProcessChain, initial_input: str = ""):
                 console.print(inference["result"])
                 break
 
-def console_popcorn(chains: list[ProcessChain], initial_input: str = ""):
-    console = Console()
-    console.clear()
-    console.print(chain(initial_input)["response"])
-    while True:
-        user_input = Prompt.ask("User")
-        if user_input.lower() == "exit":
-            console.print("[bold]Goodbye![/bold]")
-            break
-        else:
-            inference = chain(user_input)
-            console.print(inference["response"])
-            if inference["result"] is not None:
-                console.print("[bold]Done![/bold]")
-                console.print(inference["result"])
-                break
+# def console_popcorn(chains: list[ProcessChain], initial_input: str = ""):
+#     console = Console()
+#     console.clear()
+#     console.print(chain(initial_input)["response"])
+#     while True:
+#         user_input = Prompt.ask("User")
+#         if user_input.lower() == "exit":
+#             console.print("[bold]Goodbye![/bold]")
+#             break
+#         else:
+#             inference = chain(user_input)
+#             console.print(inference["response"])
+#             if inference["result"] is not None:
+#                 console.print("[bold]Done![/bold]")
+#                 console.print(inference["result"])
+#                 break
 
 
 from langchain.callbacks.base import BaseCallbackHandler
@@ -73,7 +73,7 @@ class RichCallbackHandler(BaseCallbackHandler):
         self.console.print(text)
 
 
-def gradio_bot(chain: ProcessChain, initial_input: str = "", title: str = "CustomerServiceGPT"):
+def gradio_bot(chain: Chain, initial_input: str = "", title: str = "CustomerServiceGPT"):
 
     
     import gradio as gr

@@ -1,5 +1,7 @@
 import json
 from typing import List, Optional
+
+import pytest
 from lib.conversation_memory import ConversationMemory
 from lib.process.validation_chain import FormValidationChain
 from pydantic import BaseModel, root_validator, validator
@@ -34,3 +36,48 @@ def test_validation_chain_validate_output():
     entities = json.dumps([{"name": "first_name", "value": "error"}])
     output = chain.validate(inputs={"entities": entities})
     assert output["variables"]["errors"] == {"first_name": "Some error"}
+
+@pytest.mark.parametrize(
+    "d1, d2, expected",
+    [
+        (
+           {}, 
+           {}, 
+           []
+        ),
+        (
+            {'a': 1, 'b': 2}, 
+            {'a': 1, 'b': 20, 'c': 30},
+            [
+                "- b = 20 (changed)",
+                "- c = 30 (added)"
+            ] 
+        ),
+        (
+            {'a': 1, 'b': 2, 'c': 3}, 
+            {},
+            [
+                "- a = 1 (deleted)",
+                "- b = 2 (deleted)",
+                "- c = 3 (deleted)"
+            ]
+        ),
+        (
+            {'a': 1, 'b': 2, 'c': 3}, 
+            {'a': 1, 'b': 3, 'c': 3, 'd': 4},
+            [
+                "- b = 3 (changed)",
+                "- d = 4 (added)"
+            ]
+        ),
+    ],
+)
+def test_dict_diff(d1, d2, expected):
+    chain = FormValidationChain(
+        input_variables=["entities"],
+        output_variables=["variables", "result"],
+        process=MyProcess,
+        memory=ConversationMemory(),
+    )
+    print("chain.variables_diff(d1, d2)", chain.variables_diff(d1, d2))
+    assert set(chain.variables_diff(d1, d2)) == set(expected)
