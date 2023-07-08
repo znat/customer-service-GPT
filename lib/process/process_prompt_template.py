@@ -124,7 +124,7 @@ class ProcessPromptTemplate(PromptTemplate):
             if 'question' in schema['properties'][item['name']]:
                 if item['operation'] == 'added':
                     additions.append(f"`{item['name']}`")
-                elif item['operation'] == 'changed':
+                elif item['operation'] == 'updated':
                     updates.append(f"`{item['name']}`")
 
         if not additions and not updates:
@@ -137,10 +137,10 @@ class ProcessPromptTemplate(PromptTemplate):
         all_vars_str = ", ".join(all_vars) if all_vars else "No variables"
         output = ""
         if additions and updates:
-            output = f"- User provided {additions_str} and updated {updates_str}. Aknowledge the values for {all_vars_str}."
+            output = f"- User provided {additions_str} and updated {updates_str}. Aknowledge the values of {all_vars_str}."
         elif additions and not updates:
-            output = f"- User provided {additions_str}. Aknowledge the values for {all_vars_str}."
+            output = f"- User provided {additions_str}. Aknowledge the values of {all_vars_str}."
         elif not additions and updates:
-            output = f"User updated {updates_str}. Aknowledge the values for {all_vars_str}."
+            output = f"- User updated {updates_str}. Aknowledge the values of {all_vars_str}."
         
         return output
