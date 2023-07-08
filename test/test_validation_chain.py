@@ -38,7 +38,7 @@ def test_validation_chain_validate_output():
     assert output["variables"]["errors"] == {"first_name": "Some error"}
 
 @pytest.mark.parametrize(
-    "d1, d2, expected",
+    "after, before, expected",
     [
         (
            {}, 
@@ -72,12 +72,11 @@ def test_validation_chain_validate_output():
         ),
     ],
 )
-def test_dict_diff(d1, d2, expected):
+def test_dict_diff(after, before, expected):
     chain = FormValidationChain(
         input_variables=["entities"],
         output_variables=["variables", "result"],
         process=MyProcess,
         memory=ConversationMemory(),
     )
-    print("chain.variables_diff(d1, d2)", chain.variables_diff(d1, d2))
-    assert set(chain.variables_diff(d1, d2)) == set(expected)
+    assert set(chain.variables_diff(before, after)) == set(expected)

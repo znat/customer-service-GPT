@@ -43,11 +43,11 @@ def test_process_prompt_explain_goals_at_first_turn():
 testdata = [
     (
         [{"name": "a", "operation": "updated", "value": 10}],
-        'User updated `a`. Confirm the values for `a`.\n- Ask the following question to collect the User\'s`{{next_variable_to_collect}}`: "{{next_variable_question}}"\n',
+        'User updated `a`. Confirm the values for `a`.',
     ),
     (
         [{"name": "a", "operation": "added", "value": 10}],
-        'User provided `a`. Confirm the values for `a`.\n- Ask the following question to collect the User\'s`{{next_variable_to_collect}}`: "{{next_variable_question}}"\n',
+        'User provided `a`. Confirm the values for `a`.',
     ),
     ([], ""),
     (
@@ -55,7 +55,7 @@ testdata = [
             {"name": "a", "operation": "updated", "value": 10},
             {"name": "b", "operation": "added", "value": 20},
         ],
-        'User provided `b` and updated `a`. Confirm the values for `b`, `a`.\n- Ask the following question to collect the User\'s`{{next_variable_to_collect}}`: "{{next_variable_question}}"\n',
+        'User provided `b` and updated `a`.',
     ),
 ]
 

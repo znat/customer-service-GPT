@@ -2,7 +2,7 @@ import pytest
 from lib.utils import dict_diff, get_fields_with_question
 
 @pytest.mark.parametrize(
-    "d1, d2, expected",
+    "after, before, expected",
     [
         (
            {}, 
@@ -36,21 +36,12 @@ from lib.utils import dict_diff, get_fields_with_question
         ),
     ],
 )
-def test_dict_diff(d1, d2, expected):
-    assert set(frozenset(d.items()) for d in dict_diff(d1, d2)) == set(frozenset(d.items()) for d in expected)
+def test_dict_diff(after, before, expected):
+    assert set(frozenset(d.items()) for d in dict_diff(before, after)) == set(frozenset(d.items()) for d in expected)
 
 import pytest
 from pydantic import BaseModel, Field
 from typing import List
-
-# Your function under test
-def get_fields_with_title(pydantic_model: BaseModel) -> List[str]:
-    schema = pydantic_model.schema()
-    fields_with_title = []
-    for field_name, field_value in schema['properties'].items():
-        if 'title' in field_value:
-            fields_with_title.append(field_name)
-    return fields_with_title
 
 # Define Pydantic models for testing
 class ModelOne(BaseModel):
