@@ -246,7 +246,7 @@ chat_cohere = Cohere(temperature=0, client=None)
 process_chain = ProcessChain(
     memory=ConversationMemory(),
     ner_llm=ner_llm,
-    chat_llm=chat_llm,
+    chat_llm=chat_cohere,
     process=AppointmentBookingProcess,
     verbose=True,
     entities={

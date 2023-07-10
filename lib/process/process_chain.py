@@ -2,7 +2,7 @@ from pydantic import root_validator
 from .schemas import Process
 from ..conversation_memory import ConversationMemory
 from ..ner.entities.basic_entities import Entity, EntityExample
-from .validation_chain import FormValidationChain
+from .validation_chain import ProcessValidationChain
 from .process_prompt_template import ProcessPromptTemplate
 from ..ner.ner_chain import NERChain
 from langchain.chains.sequential import SequentialChain
@@ -64,7 +64,7 @@ class ProcessChain(SequentialChain):
                 else None,
                 verbose=values["verbose"],
             ),
-            FormValidationChain(
+            ProcessValidationChain(
                 input_variables=["entities"],
                 output_variables=["variables", "result", "diff"],
                 process=values["process"],

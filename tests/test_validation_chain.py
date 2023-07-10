@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import pytest
 from lib.conversation_memory import ConversationMemory
-from lib.process.validation_chain import FormValidationChain
+from lib.process.validation_chain import ProcessValidationChain
 from pydantic import BaseModel, root_validator, validator
 from lib.process.schemas import Process
 import sys
@@ -27,7 +27,7 @@ def test_validation_chain_errors():
 
 
 def test_validation_chain_validate_output():
-    chain = FormValidationChain(
+    chain = ProcessValidationChain(
         input_variables=["entities"],
         output_variables=["variables", "result"],
         process=MyProcess,
@@ -73,7 +73,7 @@ def test_validation_chain_validate_output():
     ],
 )
 def test_dict_diff(after, before, expected):
-    chain = FormValidationChain(
+    chain = ProcessValidationChain(
         input_variables=["entities"],
         output_variables=["variables", "result"],
         process=MyProcess,

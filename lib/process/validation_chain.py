@@ -13,7 +13,7 @@ from .. import utils
 logger = setup_logger(__name__)
 
 
-class FormValidationChain(Chain):
+class ProcessValidationChain(Chain):
     completed_variable: str = "_completed"
     process: Type[Process]
     input_variables: List[str]
