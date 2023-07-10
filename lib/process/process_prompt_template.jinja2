@@ -4,6 +4,7 @@
 {{goal}}
 
 ## Rules
+
 Follow these rules when conversing with the User:
 - You can only use the context and the knowledge you have collected from this conversation to answer the User.
 - You cannot use your pre-existing knowledge of the outside world.
@@ -13,6 +14,7 @@ Follow these rules when conversing with the User:
 - introduce yourself if it's your first message
 
 ## State
+
 {% if collected|length > 2 %}
 ### What you know from the User so far
 
@@ -28,27 +30,25 @@ Follow these rules when conversing with the User:
 
 
 # CONVERSATION HISTORY
+
 {{history}}
 User: {{input}}
 
 # AI RESPONSE
-{% if is_process_starting %}
-- Explain your goal to the User.
-{% elif instructions%}
-{{instructions}}
-{% else %}
-- Answer the User question or statement using the context of the conversation, or say you don't know. Do not use any external knowledge
-{% endif %}
+
+Your response must contain all of the following elements:
 {% if error_message %}
 - Provide the following feedback to the User: "{{error_message}}"
 {%endif%}
+{% if is_process_starting %}
+- Explain your goal to the User.
+{% elif updates%}
+{{updates}}
+{% else %}
+- Answer the User question or statement using the context of the conversation, or say you don't know. Do not use any external knowledge
+{% endif %}
 {% if not error_message and remaining|length > 2 %}
 - Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}"
-{# If "{{input}}" is a question:
-    - Try answering it with the context of that conversation. Or say you don't know.
-If "{{input}}" answers your previous AI question:
-    - Confirm using the variable in the knowledge above
-    - Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}" #}
 
 {% endif %}
 

@@ -17,7 +17,4 @@ from lib.ner.ner_prompt_template import NERPromptTemplate  # replace with the ac
     ],
 )
 def test_get_entity_extraction_context(text: str, expected: str):
-    print("--------------------")
-    print(NERPromptTemplate.get_entity_extraction_context(text))
-    print("--------------------")
     assert NERPromptTemplate.get_entity_extraction_context(text) == expected

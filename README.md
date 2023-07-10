@@ -253,6 +253,7 @@ class MyProcess(Process):
     # but can used as a working/internal processing variable.
     appointment_time: Optional[str] = Field(
         title="Appointment in human frendly format",
+        aknowledgement="Great, we have booked an appointment on {{human_friendly_appointment_time}}",
     )
     @root_validator(pre=True)
     def validate(cls, values: dict):

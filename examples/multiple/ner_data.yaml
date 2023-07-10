@@ -1,0 +1,21 @@
+- text: "I'm Nathan"
+  entities:
+    - name: first_name
+      value: Nathan
+
+- text: "I'm jenny and I'm 98 yo"
+  entities:
+    - name: first_name
+      value: Jenny
+    - name: age
+      value: 98
+
+- text: "I'm Jo Neville and I'm a plumber"
+  entities:
+    - name: first_name
+      value: Jo
+    - name: last_name
+      value: Neville
+- context: "How old are you?"
+  text: Yes
+  entities: []

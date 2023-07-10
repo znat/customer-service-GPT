@@ -66,9 +66,6 @@ class FormValidationChain(Chain):
         except json.JSONDecodeError as e:
             entities = []
 
-        variables_from_memory = self.memory.kv_store.load_memory_variables().get(
-            "variables"
-        )
         variables_from_entities = self.load_variables(
             {d["name"]: d["value"] for d in entities}
         )
@@ -80,7 +77,8 @@ class FormValidationChain(Chain):
             )
             data = self.process.parse_obj(variables_from_entities)
             diff = utils.dict_diff(
-                after=variables_from_entities, before=variables_from_memory
+                after=data.dict(),
+                before=variables_from_entities,
             )
             self.save_variables(data.dict())
             logger.debug(
