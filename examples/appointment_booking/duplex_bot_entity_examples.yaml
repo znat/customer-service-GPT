@@ -95,4 +95,3 @@
 - context: "Yes, Nathan is requesting a man haircut. Can we confirm the appointment on Friday 23 at 13:00?"
   text: 'Would Nathan be available tomorrow?'
   entities: []
-  

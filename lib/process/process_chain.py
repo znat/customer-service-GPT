@@ -2,7 +2,7 @@ from pydantic import root_validator
 from .schemas import Process
 from ..conversation_memory import ConversationMemory
 from ..ner.entities.basic_entities import Entity, EntityExample
-from .validation_chain import FormValidationChain
+from .validation_chain import ProcessValidationChain
 from .process_prompt_template import ProcessPromptTemplate
 from ..ner.ner_chain import NERChain
 from langchain.chains.sequential import SequentialChain
@@ -12,6 +12,29 @@ from langchain.callbacks.base import BaseCallbackHandler
 from langchain.base_language import BaseLanguageModel
 from langchain.chains.base import Chain
 
+class ProcessConversationChain(ConversationChain):
+    @property
+    def input_keys(self) -> List[str]:
+        return ["input", "diff"]
+    @root_validator()
+    def validate_prompt_input_variables(cls, values: Dict) -> Dict:
+        """Validate that prompt input variables are consistent."""
+        memory_keys = values["memory"].memory_variables
+        input_key = values["input_key"]
+        if input_key in memory_keys:
+            raise ValueError(
+                f"The input key {input_key} was also found in the memory keys "
+                f"({memory_keys}) - please provide keys that don't overlap."
+            )
+        prompt_variables = values["prompt"].input_variables
+        expected_keys = memory_keys + ["input", "diff"]
+        if set(expected_keys) != set(prompt_variables):
+            raise ValueError(
+                "Got unexpected prompt input variables. The prompt expects "
+                f"{prompt_variables}, but got {memory_keys} as inputs from "
+                f"memory, and {input_key} as the normal input key."
+            )
+        return values
 
 class ProcessChain(SequentialChain):
     ner_llm: BaseLanguageModel
@@ -41,20 +64,20 @@ class ProcessChain(SequentialChain):
                 else None,
                 verbose=values["verbose"],
             ),
-            FormValidationChain(
+            ProcessValidationChain(
                 input_variables=["entities"],
-                output_variables=["variables", "result"],
+                output_variables=["variables", "result", "diff"],
                 process=values["process"],
                 memory=values["memory"],
                 callbacks=values.get("callbacks"),
                 verbose=values["verbose"],
             ),
-            ConversationChain(
+            ProcessConversationChain(
                 llm=values["chat_llm"],
                 verbose=values["verbose"],
                 callbacks=values.get("callbacks"),
                 prompt=ProcessPromptTemplate(
-                    input_variables=["input", "history", "variables"],
+                    input_variables=["input", "history", "variables", "diff"],
                     process=values["process"],
                     validate_template=False,
                 ),

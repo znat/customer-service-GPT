@@ -1,17 +1,32 @@
 # 🧑 Customer-Service-GPT
 
-A basic toolkit to experiment with LLM-powered process-driven chatbots. Experimental, not meant to be used in a prod setup
+A basic toolkit to experiment with LLM-powered process-driven chatbots. It is Experimental and not meant to be used in a prod setup and is based on [Pydantic](https://github.com/pydantic/pydantic) and [Langchain](https://github.com/hwchase17/langchain)
 
 Process-driven chatbots assist users in completing tasks by guiding them through a sequence of steps, such as opening a bank account or scheduling an appointment.
 
 This expermiments with:
-- Named entity recognition
-- User input validation
-- Dialogue state management
+### Contextual named entity recognition
 
-It seems to work well with `gpt-4`, and sometimes go off tracks with `gpt-3-5`
+Example:
+```
+AI: Hello! I'm here to help you book an appointment at our hair salon. To get started, could you please let me know your availability? We have the following options: Thursday 20 at 23:45, Saturday 15 at 03:45, or Wednesday 19 at 00:45.
+USER: last one is great
+
+entities:
+- availability: Wednesday 19 at 00:45
+```
+
+### Dialogue state management
+
+The `Process` which collects data from the user (an approach borrowed from [Rasa forms](https://rasa.com/docs/rasa/forms/)).
+The experiment consists here in using the business logic the format the prompt such that
+the model has the essential information to "reason" and formulate a next AI message.
+
+Currently it works with `gpt-3.5-turbo` and shines with `gpt-4`.
 
 - [🧑 Customer-Service-GPT](#-customer-service-gpt)
+    - [Contextual named entity recognition](#contextual-named-entity-recognition)
+    - [Dialogue state management](#dialogue-state-management)
   - [👷 Install](#-install)
   - [🎬 Demos](#-demos)
     - [📅 Appointment booking](#-appointment-booking)
@@ -37,7 +52,7 @@ It seems to work well with `gpt-4`, and sometimes go off tracks with `gpt-3-5`
 
 Requirements: python 3.10 and [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 ```bash
-git clone ...
+git clone https://github.com/znat/customer-service-GPT/
 poetry install
 ```
 Create an `.env` file at the root containing your OpenAI API key. 
@@ -253,6 +268,7 @@ class MyProcess(Process):
     # but can used as a working/internal processing variable.
     appointment_time: Optional[str] = Field(
         title="Appointment in human frendly format",
+        aknowledgement="Great, we have booked an appointment on {{human_friendly_appointment_time}}",
     )
     @root_validator(pre=True)
     def validate(cls, values: dict):

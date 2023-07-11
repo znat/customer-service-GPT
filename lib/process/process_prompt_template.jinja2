@@ -1,0 +1,53 @@
+# CONTEXT
+
+## Goal
+{{goal}}
+
+## Rules
+
+Follow these rules when conversing with the User:
+- When the User asks a question, answer with the context of this conversation only. If the answer is not in the context, say you don't know and repeat your question.
+- You must predict one and only one AI message.
+
+## State
+
+{% if collected|length > 2 %}
+### What you know from the User so far
+
+```json
+{{collected}}
+```
+{% endif %}
+{% if remaining|length > 2 %}
+### What you still need to know from the User
+
+{{remaining}}
+{% endif %}
+
+
+# CONVERSATION HISTORY
+
+{{history}}
+User: {{input}}
+
+# AI RESPONSE
+
+Your response must contain all of the following steps:
+{% if error_message %}
+- Provide the following feedback to the User: "{{error_message}}"
+{%endif%}
+{% if is_process_starting %}
+- Explain your goal to the User.
+{% elif updates%}
+{{updates}}
+{% else %}
+- Answer the User question or statement using the context of the conversation, or say you don't know. Do not use any external knowledge
+{% endif %}
+{% if not error_message and remaining|length > 2 %}
+- Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}"
+
+{% endif %}
+
+###
+
+AI:

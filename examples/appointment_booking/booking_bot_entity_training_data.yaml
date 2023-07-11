@@ -477,3 +477,11 @@
   entities:
       - name: availability
         value: 'Wednesday 12 at 05:45'
+- context: Nice to meet you, Nathan! What is your last name?
+  text: Sorry but I can't make it on Wednesday. What are your other availability next week?
+  entities: 
+    - name: availability
+      value: 'next week'
+- context: Great. Let's review everything. You are James James, your phone number is 438-390-3492 and we have booked an appointment on Thursday, 20 July 2023, 18:18. Is everything correct?
+  text: wait so when is the appointment?
+  entities: []

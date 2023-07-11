@@ -66,6 +66,7 @@ To all other questions reply you don't know.
 
     appointment_time: Optional[str] = Field(
         title="Appointment in human frendly format",
+        aknowledgement="Great, we have booked an appointment on {{human_friendly_appointment_time}}",
     )
     # This variable will be set in the validation step, but will not be asked to the user, hence no `question``.
     appointment: Optional[dict[str, str]] = Field(
@@ -146,7 +147,15 @@ To all other questions reply you don't know.
             random.sample(cls.salon_available_slots, 3)
         )
         if values.get("availability") is not None:
+            # The grain of a datetime can be just one minute. We want to make sure we have at least 15 minutes
+            if values["availability"]["grain"]  < 15 * 60:
+                values["availability"] ={
+                    "start": values["availability"]["start"],
+                    "end": (datetime.datetime.fromisoformat(values["availability"]["start"]) + datetime.timedelta(minutes=15)).isoformat(),
+                    "grain":  15 * 60,
+                }
             matching_slots = cls.get_matching_slots(values["availability"])
+
             if len(matching_slots) == 0:
                 logger.debug("No matching slot found")
                 del values["availability"]
@@ -228,10 +237,11 @@ To all other questions reply you don't know.
 
 
 ner_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-3.5-turbo")
-chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-4")
+chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-3.5-turbo")
 
 from langchain.llms import Cohere
-chat_cohere = Cohere(temperature=0, client=None)
+
+# chat_cohere = Cohere(temperature=0, client=None)
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),

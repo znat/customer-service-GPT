@@ -1,5 +1,6 @@
 import json
-from typing import Any, Optional, Tuple, Type
+import os
+from typing import Any, Tuple, Type
 
 from jinja2 import Template
 from langchain.prompts.prompt import PromptTemplate
@@ -11,71 +12,15 @@ logger = setup_logger(__name__)
 from ..utils import convert_list_to_string
 from .schemas import Process
 
-DEFAULT_PROMPT = """# CONTEXT
-
-## Goal
-{{goal}}
-
-## Rules
-Follow these rules when conversing with the User:
-- You can only use the context and the knowledge you have collected from this conversation to answer the User.
-- You cannot use your pre-existing knowledge of the outside world.
-- When the User asks a question, answer with the context of this conversation only. If the answer is not in the context, say you don't know and repeat your question.
-- If the user does not answer the question, reply and repeat your question.
-- You must predict one and only one AI message.
-- introduce yourself if it's your first message
-
-## Knowledge
-{% if collected|length > 2 %}
-### What you know from the User so far
-
-```json
-{{collected}}
-```
-{% endif %}
-{% if remaining|length > 2 %}
-### What you still need to know from the User
-
-You still need to collect {{remaining_as_string}} from the user and in the right order:
-
-{{remaining}}
-
-{% endif %}
-
-
-# CONVERSATION HISTORY
-{{history}}
-User: {{input}}
-
-# AI RESPONSE
-{% if is_process_starting %}
-- Explain your goal to the User
-- Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}"
-{% elif error_message %}
-Provide the following feedback to the User: "{{error_message}}"
-(the User is allowed to provide an answer to another question to ask)
-{% elif not error_message and remaining|length > 2 %}
-If "{{input}}" is a question:
-    - Try answering it with the context of that conversation. Or say you don't know.
-If "{{input}}" answers your previous AI question:
-    - Confirm using the variable in the knowledge above
-    - Ask the following question to collect the User's`{{next_variable_to_collect}}`: "{{next_variable_question}}"
-
-{% else %}
-You have successfully completed your task. Congratulations!
-{% endif %}
-
-###
-
-AI:"""
-
 
 class ProcessPromptTemplate(PromptTemplate):
     input_variables: list[str] = [
         "input",
         "history",
     ]
-    template: str = DEFAULT_PROMPT
+    template: str = open(
+        os.path.join(os.path.dirname(__file__), "process_prompt_template.jinja2")
+    ).read()
 
     template_format: str = "jinja2"
     validate_template: bool = True
@@ -90,7 +35,7 @@ class ProcessPromptTemplate(PromptTemplate):
         ) = self.get_remaining_variables_to_collect(kwargs["variables"])
 
         errors: dict | None = kwargs["variables"].get("errors")
-                
+
         error_message = (
             errors.get(list(errors.keys())[0]) if errors and len(errors) else None
         )
@@ -108,7 +53,7 @@ class ProcessPromptTemplate(PromptTemplate):
                 ]
             ).render(**kwargs["variables"])
 
-        return super().format(
+        return Template(self.template, lstrip_blocks=True, trim_blocks=True).render(
             goal=self.process.process_description,
             is_process_starting=self.is_first_message(kwargs["history"]),
             remaining=remaining_as_list,
@@ -121,16 +66,16 @@ class ProcessPromptTemplate(PromptTemplate):
             next_variable_to_collect=next_variable_to_collect,
             next_variable_question=next_variable_question,
             errors=json.dumps(errors, indent=2) if errors is not None else None,
+            updates=self.get_updates(kwargs["diff"], kwargs["variables"]),
             **kwargs,
         )
+
     def is_first_message(self, history: str) -> bool:
         return "AI:" not in history
 
     def get_collected_variables(self, variables: dict[str, Any]) -> dict[str, Any]:
         # Filter out None values and errors
-        return {
-            k: v for k, v in variables.items() if v is not None and k != "errors"
-        }
+        return {k: v for k, v in variables.items() if v is not None and k != "errors"}
 
     def get_collected_variable_names(self, variables: dict[str, Any]) -> list[str]:
         return list(self.get_collected_variables(variables).keys())
@@ -162,9 +107,41 @@ class ProcessPromptTemplate(PromptTemplate):
 
     def convert_dict_to_ordered_list(self, data_dict: dict):
         result = []
-        print(data_dict.items())
         for index, (key, value) in enumerate(data_dict.items(), start=1):
             entry = f"{index}. {key} ({value['variable_name']}): {value['description']}"
             result.append(entry)
 
         return "\n".join(result)
+
+    def get_updates(self, diff: list[dict], variables: dict) -> str:
+        additions = []
+        updates = []
+        schema = self.process.schema()
+        for item in diff:
+            if (
+                "question" in schema["properties"][item["name"]]
+                or "aknowledgement" in schema["properties"][item["name"]]
+            ):
+                if item["operation"] == "added":
+                    additions.append(f"{item['name']}")
+                elif item["operation"] == "updated":
+                    updates.append(f"{item['name']}")
+
+        if not additions and not updates:
+            return ""
+
+        additions_str = ", ".join([f"`{a}`" for a in additions]) if additions else ""
+        updates_str = ", ".join([f"`{u}`" for u in updates]) if updates else ""
+
+        all_vars = additions + updates
+        all_vars_with_values = [f"`{var}`: \"{variables[var]}\"" for var in all_vars]
+        all_vars_str = ", ".join(all_vars_with_values) if all_vars_with_values else "No variables"
+        output = ""
+        if additions and updates:
+            output = f"- User provided {additions_str} and updated {updates_str}. Aknowledge the values of {all_vars_str}."
+        elif additions and not updates:
+            output = f"- User provided {additions_str}. Aknowledge the values of {all_vars_str}."
+        elif not additions and updates:
+            output = f"- User updated {updates_str}. Aknowledge the values of {all_vars_str}."
+
+        return output

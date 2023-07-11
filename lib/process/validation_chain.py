@@ -8,11 +8,12 @@ from .schemas import Result, Status, Process
 
 from ..conversation_memory import ConversationMemory
 from ..logger_config import setup_logger
+from .. import utils
 
 logger = setup_logger(__name__)
 
 
-class FormValidationChain(Chain):
+class ProcessValidationChain(Chain):
     completed_variable: str = "_completed"
     process: Type[Process]
     input_variables: List[str]
@@ -65,43 +66,64 @@ class FormValidationChain(Chain):
         except json.JSONDecodeError as e:
             entities = []
 
-        variables = self.load_variables({d["name"]: d["value"] for d in entities})
+        variables_from_entities = self.load_variables(
+            {d["name"]: d["value"] for d in entities}
+        )
         result: Result | None = None
+        diff = []
         try:
             logger.debug(
-                f"Current variables: {variables}",
+                f"Current variables: {variables_from_entities}",
             )
-            data = self.process.parse_obj(variables)
+            data = self.process.parse_obj(variables_from_entities)
+            diff = utils.dict_diff(
+                after=data.dict(),
+                before=variables_from_entities,
+            )
             self.save_variables(data.dict())
-            print("ERRORS", data)
             logger.debug(
                 f"Process model post-validation: {data.dict()}",
             )
 
             if data.is_completed():
-                result = Result(status=Status.completed, result=data, errors=data.errors)
-                logger.debug(f"Process result: {result.dict()}")
+                result = Result(
+                    status=Status.completed, result=data, errors=data.errors
+                )
             if data.is_failed():
                 result = Result(status=Status.failed, result=data, errors=None)
-                logger.debug(f"Process result: {result.dict()}")
             self.memory.kv_store.set("errors", {})
-            variables = self.memory.kv_store.load_memory_variables()["variables"]
-            variables["errors"] = data.errors
+            variables_from_entities = self.memory.kv_store.load_memory_variables()[
+                "variables"
+            ]
+            variables_from_entities["errors"] = data.errors
         except ValidationError as e:
             logger.debug(
                 f"Validation error: {e}",
             )
             errors = self.convert_validation_error_to_dict(e, "assertion")
-            variables = {
+            variables_from_entities = {
                 k: v
                 for k, v in self.memory.kv_store.load_memory_variables()[
                     "variables"
                 ].items()
                 if k not in errors.keys()
             }
-            logger.debug("Variables after validation errors:", variables)
-            variables["errors"] = errors
-        return {"variables": variables, "result": result.dict() if result else None}
+            logger.debug("Variables after validation errors:", variables_from_entities)
+            variables_from_entities["errors"] = errors
+        return {
+            "variables": variables_from_entities,
+            "diff": diff,
+            "result": result.dict() if result else None,
+        }
+
+    def variables_diff(
+        self, before: dict[str, Any], after: dict[str, Any]
+    ) -> list[str]:
+        result = []
+        diff_list = utils.dict_diff(before, after)
+        for diff in diff_list:
+            result.append(f"- {diff['name']} = {diff['value']} ({diff['operation']})")
+        return result
 
     @staticmethod
     def convert_validation_error_to_dict(

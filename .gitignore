@@ -6,3 +6,4 @@ fine_tunes/
 .env
 booking_bot_entity_examples.jsonl
 *.jsonl
+examples/appointment_booking/booking_bot_entity_examples.yaml
