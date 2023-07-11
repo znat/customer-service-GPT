@@ -66,7 +66,7 @@ class ProcessPromptTemplate(PromptTemplate):
             next_variable_to_collect=next_variable_to_collect,
             next_variable_question=next_variable_question,
             errors=json.dumps(errors, indent=2) if errors is not None else None,
-            updates=self.get_updates(kwargs["diff"]),
+            updates=self.get_updates(kwargs["diff"], kwargs["variables"]),
             **kwargs,
         )
 
@@ -107,14 +107,13 @@ class ProcessPromptTemplate(PromptTemplate):
 
     def convert_dict_to_ordered_list(self, data_dict: dict):
         result = []
-        print(data_dict.items())
         for index, (key, value) in enumerate(data_dict.items(), start=1):
             entry = f"{index}. {key} ({value['variable_name']}): {value['description']}"
             result.append(entry)
 
         return "\n".join(result)
 
-    def get_updates(self, diff: list[dict]) -> str:
+    def get_updates(self, diff: list[dict], variables: dict) -> str:
         additions = []
         updates = []
         schema = self.process.schema()
@@ -124,18 +123,19 @@ class ProcessPromptTemplate(PromptTemplate):
                 or "aknowledgement" in schema["properties"][item["name"]]
             ):
                 if item["operation"] == "added":
-                    additions.append(f"`{item['name']}`")
+                    additions.append(f"{item['name']}")
                 elif item["operation"] == "updated":
-                    updates.append(f"`{item['name']}`")
+                    updates.append(f"{item['name']}")
 
         if not additions and not updates:
             return ""
 
-        additions_str = ", ".join(additions) if additions else ""
-        updates_str = ", ".join(updates) if updates else ""
+        additions_str = ", ".join([f"`{a}`" for a in additions]) if additions else ""
+        updates_str = ", ".join([f"`{u}`" for u in updates]) if updates else ""
 
         all_vars = additions + updates
-        all_vars_str = ", ".join(all_vars) if all_vars else "No variables"
+        all_vars_with_values = [f"`{var}`: \"{variables[var]}\"" for var in all_vars]
+        all_vars_str = ", ".join(all_vars_with_values) if all_vars_with_values else "No variables"
         output = ""
         if additions and updates:
             output = f"- User provided {additions_str} and updated {updates_str}. Aknowledge the values of {all_vars_str}."

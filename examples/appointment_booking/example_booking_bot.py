@@ -241,12 +241,12 @@ chat_llm = ChatOpenAI(temperature=0, client=None, max_tokens=200, model="gpt-3.5
 
 from langchain.llms import Cohere
 
-chat_cohere = Cohere(temperature=0, client=None)
+# chat_cohere = Cohere(temperature=0, client=None)
 
 process_chain = ProcessChain(
     memory=ConversationMemory(),
     ner_llm=ner_llm,
-    chat_llm=chat_cohere,
+    chat_llm=chat_llm,
     process=AppointmentBookingProcess,
     verbose=True,
     entities={
