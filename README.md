@@ -7,7 +7,7 @@ Process-driven chatbots assist users in completing tasks by guiding them through
 This expermiments with:
 ### Contextual named entity recognition
 
-In the following example:
+Example:
 ```
 AI: Hello! I'm here to help you book an appointment at our hair salon. To get started, could you please let me know your availability? We have the following options: Thursday 20 at 23:45, Saturday 15 at 03:45, or Wednesday 19 at 00:45.
 USER: last one is great
