@@ -19,7 +19,7 @@ entities:
 ### Dialogue state management
 
 The `Process` which collects data from the user (an approach borrowed from [Rasa forms](https://rasa.com/docs/rasa/forms/)).
-The experiment consists here in using the business logic the format the prompt such that
+The experiment consists here in using the business logic to format the prompt such that
 the model has the essential information to "reason" and formulate a next AI message.
 
 Currently it works with `gpt-3.5-turbo` and shines with `gpt-4`.
